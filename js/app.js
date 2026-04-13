@@ -316,8 +316,57 @@ async function startAnimExport() {
   prog.style.display = 'block';
 
   if (format === 'frames') await exportFrames(totalFrames, fps, w, h, fill, text);
+  else if (format === 'mp4') await exportMP4(totalFrames, fps, w, h, fill, text);
   else if (format === 'webm') await exportWebM(totalFrames, fps, duration, w, h, fill, text);
   else await exportGIF(totalFrames, fps, w, h, fill, text);
+}
+
+async function exportMP4(totalFrames, fps, w, h, fill, text) {
+  text.textContent = 'LOADING MP4 ENCODER...';
+  try {
+    // We need to load the official build from unpkg
+    await loadScript('https://unpkg.com/h264-mp4-encoder/emscripten/index.js');
+    // Wait for the WASM module to be ready
+    await new Promise(r => {
+      const check = () => { if (window.H264MP4Encoder) r(); else setTimeout(check, 100); };
+      check();
+    });
+  } catch (e) {
+    text.textContent = 'MP4 Encoder failed to load.';
+    return;
+  }
+
+  const encoder = await window.H264MP4Encoder.create();
+  
+  // H264 requires even dimensions
+  const finalW = w % 2 === 0 ? w : w - 1;
+  const finalH = h % 2 === 0 ? h : h - 1;
+
+  encoder.width = finalW;
+  encoder.height = finalH;
+  encoder.frameRate = fps;
+  encoder.outputFilename = `glitch-${Date.now()}.mp4`;
+  encoder.initialize();
+
+  for (let f = 0; f < totalFrames; f++) {
+    const c = await renderFrameFull(f, finalW, finalH);
+    const ctx = c.getContext('2d');
+    const imgData = ctx.getImageData(0, 0, finalW, finalH);
+    encoder.addFrameRgba(imgData.data);
+    
+    fill.style.width = ((f + 1) / totalFrames * 100).toFixed(0) + '%';
+    text.textContent = `FRAME ${f + 1} / ${totalFrames} — MP4 ENCODING`;
+    await sleep(0);
+  }
+
+  encoder.finalize();
+  const uint8Array = encoder.FS.readFile(encoder.outputFilename);
+  const blob = new Blob([uint8Array], { type: 'video/mp4' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.download = encoder.outputFilename; a.href = url; a.click();
+  
+  encoder.delete();
+  setTimeout(() => { URL.revokeObjectURL(url); document.getElementById('export-progress').style.display = 'none'; }, 3000);
 }
 
 async function renderFrameFull(f, w, h) {
