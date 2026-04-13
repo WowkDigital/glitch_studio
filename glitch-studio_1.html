@@ -13,22 +13,33 @@
     <div class="hst">■ SYSTEM ONLINE</div>
   </header>
 
+  <div class="top-bar">
+    <div class="toolbar" id="toolbar" style="display:none">
+      <button class="btn btn-c" onclick="applyChain()">▶ APPLY</button>
+      <button class="btn btn-m" id="animate-btn" onclick="toggleAnimate()">⟳ ANIMATE</button>
+      <button class="btn btn-c" onclick="resetImage()">↺ RESET</button>
+      <button class="btn btn-g" onclick="downloadStatic()">⬇ IMAGE</button>
+      <button class="btn btn-y" onclick="startAnimExport()">⬇ ANIM</button>
+      <button class="btn btn-r" onclick="clearImage()">✕</button>
+    </div>
+  </div>
+
   <div class="app">
     <!-- LEFT: Library -->
     <div class="pl">
       <div class="stitle">// EFFECTS LIBRARY</div>
       <div style="font-size:8px;color:var(--dim)">click [＋] to add to chain →</div>
 
-      <div class="ecard" onclick="addToChain('rgb-split')"><div class="ename">RGB SPLIT <span class="add-btn">＋</span></div><div class="edesc">Chromatic aberration — R/G/B channel shift</div></div>
-      <div class="ecard" onclick="addToChain('scanlines')"><div class="ename">SCANLINES <span class="add-btn">＋</span></div><div class="edesc">Horizontal CRT lines with adjustable density</div></div>
-      <div class="ecard" onclick="addToChain('pixel-sort')"><div class="ename">PIXEL SORT <span class="add-btn">＋</span></div><div class="edesc">Sort pixels by brightness — databend style</div></div>
-      <div class="ecard" onclick="addToChain('data-corrupt')"><div class="ename">DATA CORRUPT <span class="add-btn">＋</span></div><div class="edesc">Data corruption blocks, corrupted file look</div></div>
-      <div class="ecard" onclick="addToChain('neon-burn')"><div class="ename">NEON BURN <span class="add-btn">＋</span></div><div class="edesc">Neon duotone + cyberpunk hue rotation</div></div>
-      <div class="ecard" onclick="addToChain('vhs')"><div class="ename">VHS TAPE <span class="add-btn">＋</span></div><div class="edesc">Magnetic noise, color bleed, old tape feel</div></div>
-      <div class="ecard" onclick="addToChain('hologram')"><div class="ename">HOLOGRAM <span class="add-btn">＋</span></div><div class="edesc">Interlace + holographic projection</div></div>
-      <div class="ecard" onclick="addToChain('noise')"><div class="ename">STATIC NOISE <span class="add-btn">＋</span></div><div class="edesc">Analog static noise grain</div></div>
-      <div class="ecard" onclick="addToChain('edge-glow')"><div class="ename">EDGE GLOW <span class="add-btn">＋</span></div><div class="edesc">Sobel edge detection + neon outline</div></div>
-      <div class="ecard" onclick="addToChain('all-glitch')"><div class="ename">FULL GLITCH <span class="add-btn">＋</span></div><div class="edesc">All effects at once — chaos overdrive</div></div>
+      <div class="ecard" onclick="addToChain('rgb-split')"><div class="ename">RGB SPLIT <span class="add-btn" onclick="event.stopPropagation(); addToChain('rgb-split', true)">＋</span></div><div class="edesc">Chromatic aberration — R/G/B channel shift</div></div>
+      <div class="ecard" onclick="addToChain('scanlines')"><div class="ename">SCANLINES <span class="add-btn" onclick="event.stopPropagation(); addToChain('scanlines', true)">＋</span></div><div class="edesc">Horizontal CRT lines with adjustable density</div></div>
+      <div class="ecard" onclick="addToChain('pixel-sort')"><div class="ename">PIXEL SORT <span class="add-btn" onclick="event.stopPropagation(); addToChain('pixel-sort', true)">＋</span></div><div class="edesc">Sort pixels by brightness — databend style</div></div>
+      <div class="ecard" onclick="addToChain('data-corrupt')"><div class="ename">DATA CORRUPT <span class="add-btn" onclick="event.stopPropagation(); addToChain('data-corrupt', true)">＋</span></div><div class="edesc">Data corruption blocks, corrupted file look</div></div>
+      <div class="ecard" onclick="addToChain('neon-burn')"><div class="ename">NEON BURN <span class="add-btn" onclick="event.stopPropagation(); addToChain('neon-burn', true)">＋</span></div><div class="edesc">Neon duotone + cyberpunk hue rotation</div></div>
+      <div class="ecard" onclick="addToChain('vhs')"><div class="ename">VHS TAPE <span class="add-btn" onclick="event.stopPropagation(); addToChain('vhs', true)">＋</span></div><div class="edesc">Magnetic noise, color bleed, old tape feel</div></div>
+      <div class="ecard" onclick="addToChain('hologram')"><div class="ename">HOLOGRAM <span class="add-btn" onclick="event.stopPropagation(); addToChain('hologram', true)">＋</span></div><div class="edesc">Interlace + holographic projection</div></div>
+      <div class="ecard" onclick="addToChain('noise')"><div class="ename">STATIC NOISE <span class="add-btn" onclick="event.stopPropagation(); addToChain('noise', true)">＋</span></div><div class="edesc">Analog static noise grain</div></div>
+      <div class="ecard" onclick="addToChain('edge-glow')"><div class="ename">EDGE GLOW <span class="add-btn" onclick="event.stopPropagation(); addToChain('edge-glow', true)">＋</span></div><div class="edesc">Sobel edge detection + neon outline</div></div>
+      <div class="ecard" onclick="addToChain('all-glitch')"><div class="ename">FULL GLITCH <span class="add-btn" onclick="event.stopPropagation(); addToChain('all-glitch', true)">＋</span></div><div class="edesc">All effects at once — chaos overdrive</div></div>
 
       <div class="divider"></div>
       <div class="stitle">// PRESETS</div>
@@ -54,14 +65,6 @@
         <div class="cwrap" id="cwrap" style="display:none">
           <canvas id="main-canvas"></canvas>
         </div>
-        <div class="toolbar" id="toolbar" style="display:none">
-          <button class="btn btn-c" onclick="applyChain()">▶ APPLY</button>
-          <button class="btn btn-m" id="animate-btn" onclick="toggleAnimate()">⟳ ANIMATE</button>
-          <button class="btn btn-c" onclick="resetImage()">↺ RESET</button>
-          <button class="btn btn-g" onclick="downloadStatic()">⬇ IMAGE</button>
-          <button class="btn btn-y" onclick="startAnimExport()">⬇ ANIM</button>
-          <button class="btn btn-r" onclick="clearImage()">✕</button>
-        </div>
         <div id="export-progress">
           <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
           <div class="prog-text" id="prog-text">RENDERING...</div>
@@ -70,6 +73,7 @@
       </div>
       <input type="file" id="file-input" accept="image/*" onchange="loadFile(this)">
     </div>
+
 
     <!-- RIGHT: Chain + Settings -->
     <div class="pr">
@@ -111,11 +115,6 @@
         <span class="param-label">DURATION</span>
         <input type="range" id="gif-duration" min="1" max="10" value="3" step="1" oninput="document.getElementById('gif-dur-val').textContent=this.value+'s'">
         <span class="param-val" id="gif-dur-val">3s</span>
-      </div>
-      <div class="param-row">
-        <span class="param-label">EXPORT FPS</span>
-        <input type="range" id="gif-fps" min="5" max="30" value="12" step="1" oninput="document.getElementById('gif-fps-val').textContent=this.value">
-        <span class="param-val" id="gif-fps-val">12</span>
       </div>
       <div class="param-row">
         <span class="param-label">FORMAT</span>

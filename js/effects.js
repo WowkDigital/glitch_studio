@@ -25,7 +25,7 @@ export function applyFx(d, w, h, id, p, rng, accentColor) {
 }
 
 function fxRGB(d, w, h, p, rng) {
-  const sx = p.x || 12, sy = p.y || 4, it = (p.intensity || 7) / 10, bn = Math.max(1, p.bands || 6);
+  const sx = p.x ?? 12, sy = p.y ?? 4, it = (p.intensity ?? 7) / 10, bn = Math.max(1, p.bands ?? 6);
   const orig = new Uint8ClampedArray(d); const bh = Math.ceil(h / bn);
   for (let b = 0; b < bn; b++) {
     const rs = b * bh, re = Math.min(rs + bh, h);
@@ -42,12 +42,12 @@ function fxRGB(d, w, h, p, rng) {
 }
 
 function fxSL(d, w, h, p) {
-  const lh = Math.max(1, p.height || 2), gap = Math.max(1, p.gap || 4), op = (p.opacity || 60) / 100, per = lh + gap;
+  const lh = Math.max(1, p.height ?? 2), gap = Math.max(1, p.gap ?? 4), op = (p.opacity ?? 60) / 100, per = lh + gap;
   for (let y = 0; y < h; y++) if (y % per < lh) { const f = 1 - op; for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; d[i] *= f; d[i + 1] *= f; d[i + 2] *= f; } }
 }
 
 function fxPS(d, w, h, p) {
-  const lo = p.lo || 80, hi = p.hi || 200, hor = !(p.dir > 0.5), cp = (p.chunk || 30) / 100;
+  const lo = p.lo ?? 80, hi = p.hi ?? 200, hor = !(p.dir > 0.5), cp = (p.chunk ?? 30) / 100;
   function lm(i) { return .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2]; }
   if (hor) {
     for (let y = 0; y < h; y++) { let x = 0; while (x < w) { const l0 = lm((y * w + x) * 4); if (l0 >= lo && l0 <= hi) { let e = x; const mr = Math.round(w * cp); while (e < w && e - x < mr) { if (lm((y * w + e) * 4) < lo || lm((y * w + e) * 4) > hi) break; e++; } const px = []; for (let p2 = x; p2 < e; p2++) { const i = (y * w + p2) * 4; px.push([d[i], d[i + 1], d[i + 2], d[i + 3], lm(i)]); } px.sort((a, b) => a[4] - b[4]); for (let p2 = x; p2 < e; p2++) { const i = (y * w + p2) * 4, q = px[p2 - x]; d[i] = q[0]; d[i + 1] = q[1]; d[i + 2] = q[2]; } x = e; } else x++; } }
@@ -57,7 +57,7 @@ function fxPS(d, w, h, p) {
 }
 
 function fxDC(d, w, h, p, rng) {
-  const amt = p.amount || 15, bh = p.bh || 8, sh = p.shift || 60, col = (p.color || 1) > .5;
+  const amt = p.amount ?? 15, bh = p.bh ?? 8, sh = p.shift ?? 60, col = (p.color ?? 1) > .5;
   for (let i = 0; i < amt; i++) {
     const y = Math.floor(rng() * h), dh = Math.ceil(rng() * bh), dx = Math.round((rng() - .5) * 2 * sh), cr = col ? Math.floor(rng() * 3) : -1;
     for (let dy = 0; dy < dh && y + dy < h; dy++) for (let x = 0; x < w; x++) {
@@ -68,7 +68,7 @@ function fxDC(d, w, h, p, rng) {
 }
 
 function fxNB(d, w, h, p, accentColor) {
-  const it = (p.intensity || 8) / 10, hs = p.hue || 180, sat = (p.sat || 180) / 100;
+  const it = (p.intensity ?? 8) / 10, hs = p.hue ?? 180, sat = (p.sat ?? 180) / 100;
   const ar = parseInt(accentColor.slice(1, 3), 16), ag = parseInt(accentColor.slice(3, 5), 16), ab = parseInt(accentColor.slice(5, 7), 16);
   const ang = hs * Math.PI / 180, cos = Math.cos(ang), sin = Math.sin(ang);
   for (let i = 0; i < d.length; i += 4) {
@@ -83,7 +83,7 @@ function fxNB(d, w, h, p, accentColor) {
 }
 
 function fxVHS(d, w, h, p, rng) {
-  const na = (p.noise || 30) / 100, jt = p.jitter || 10, tr = p.tracking || 5, bl = p.bleed || 10;
+  const na = (p.noise ?? 30) / 100, jt = p.jitter ?? 10, tr = p.tracking ?? 5, bl = p.bleed ?? 10;
   const orig = new Uint8ClampedArray(d);
   for (let y = 0; y < h; y++) {
     const to = Math.round(Math.sin(y / (h / tr) + rng() * Math.PI) * jt);
@@ -97,7 +97,7 @@ function fxVHS(d, w, h, p, rng) {
 }
 
 function fxHolo(d, w, h, p, accentColor) {
-  const op = (p.opacity || 70) / 100, ln = p.lines || 3, sh = p.shift || 5;
+  const op = (p.opacity ?? 70) / 100, ln = p.lines ?? 3, sh = p.shift ?? 5;
   const ar = parseInt(accentColor.slice(1, 3), 16), ag = parseInt(accentColor.slice(3, 5), 16), ab = parseInt(accentColor.slice(5, 7), 16);
   const per = Math.ceil(h / (ln * 2)), orig = new Uint8ClampedArray(d);
   for (let i = 0; i < d.length; i += 4) {
@@ -111,7 +111,7 @@ function fxHolo(d, w, h, p, accentColor) {
 }
 
 function fxNoise(d, w, h, p, rng) {
-  const amt = (p.amount || 25) / 100, col = (p.color || 0) > .5, bl = (p.blend || 70) / 100;
+  const amt = (p.amount ?? 25) / 100, col = (p.color ?? 0) > .5, bl = (p.blend ?? 70) / 100;
   for (let i = 0; i < d.length; i += 4) {
     if (col) { d[i] = Math.min(255, Math.max(0, d[i] * (1 - amt * bl) + (rng() * 255) * amt * bl)); d[i + 1] = Math.min(255, Math.max(0, d[i + 1] * (1 - amt * bl) + (rng() * 255) * amt * bl)); d[i + 2] = Math.min(255, Math.max(0, d[i + 2] * (1 - amt * bl) + (rng() * 255) * amt * bl)); }
     else { const n = (rng() - .5) * 2 * 255 * amt * bl; d[i] = Math.min(255, Math.max(0, d[i] + n)); d[i + 1] = Math.min(255, Math.max(0, d[i + 1] + n)); d[i + 2] = Math.min(255, Math.max(0, d[i + 2] + n)); }
@@ -119,7 +119,7 @@ function fxNoise(d, w, h, p, rng) {
 }
 
 function fxEdge(d, w, h, p, accentColor) {
-  const thr = (p.threshold || 30) / 100 * 255, dk = (p.darkbg || 1) > .5;
+  const thr = (p.threshold ?? 30) / 100 * 255, dk = (p.darkbg ?? 1) > .5;
   const ar = parseInt(accentColor.slice(1, 3), 16), ag = parseInt(accentColor.slice(3, 5), 16), ab = parseInt(accentColor.slice(5, 7), 16);
   const orig = new Uint8ClampedArray(d);
   function g(i) { return .299 * orig[i] + .587 * orig[i + 1] + .114 * orig[i + 2]; }
@@ -135,8 +135,10 @@ function fxEdge(d, w, h, p, accentColor) {
 }
 
 function fxAll(d, w, h, p, rng) {
-  const it = (p.intensity || 5) / 10;
-  fxRGB(d, w, h, { x: 12 * it, y: 4 * it, intensity: p.intensity || 5, bands: 6 }, rng);
+  const it = (p.intensity ?? 5) / 10;
+  if (it === 0) return;
+  fxRGB(d, w, h, { x: 12 * it, y: 4 * it, intensity: p.intensity ?? 5, bands: 6 }, rng);
+
   const amt = Math.round(5 + it * 20), sh = Math.round(20 + it * 80), bh = Math.round(2 + it * 10);
   for (let i = 0; i < amt; i++) {
     const y = Math.floor(rng() * h), dx = Math.round((rng() - .5) * 2 * sh);
@@ -149,3 +151,4 @@ function fxAll(d, w, h, p, rng) {
   fxSL(d, w, h, { height: 2, gap: 4, opacity: 40 });
   fxNoise(d, w, h, { amount: 15, blend: 60 }, rng);
 }
+

@@ -25,8 +25,10 @@ body {
   background: var(--bg);
   color: var(--txt);
   font-family: 'Share Tech Mono', monospace;
-  min-height: 100vh;
-  overflow-x: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 body::before {
@@ -57,6 +59,18 @@ header {
   box-shadow: 0 0 20px rgba(0, 255, 249, .15);
   position: relative;
   z-index: 100;
+  flex-shrink: 0;
+}
+
+.top-bar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--bdr);
+  padding: 6px 20px;
+  display: flex;
+  justify-content: center;
+  z-index: 90;
+  flex-shrink: 0;
+  min-height: 38px;
 }
 
 .logo {
@@ -92,7 +106,8 @@ header {
 .app {
   display: grid;
   grid-template-columns: 255px 1fr 285px;
-  height: calc(100vh - 49px);
+  flex: 1;
+  overflow: hidden;
 }
 
 .pl, .pr {
@@ -162,16 +177,37 @@ header {
 
 .add-btn {
   font-size: 14px;
-  color: var(--ng);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
   opacity: 0;
-  transition: .15s;
-  text-shadow: 0 0 6px var(--ng);
+  transition: all .15s ease;
   cursor: pointer;
   line-height: 1;
 }
 
 .ecard:hover .add-btn {
-  opacity: 1;
+  opacity: 0.6;
+}
+
+.add-btn:hover {
+  opacity: 1 !important;
+  color: var(--ng);
+  background: rgba(0, 255, 65, 0.1);
+  border-color: var(--ng);
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.2);
+  text-shadow: 0 0 5px var(--ng);
+}
+
+.add-btn:active {
+  transform: scale(0.92);
+  background: rgba(0, 255, 65, 0.2);
 }
 
 /* Chain */
@@ -268,7 +304,7 @@ header {
   background: #050508;
   position: relative;
   overflow: hidden;
-  gap: 10px;
+  padding: 20px;
 }
 
 .ca::before {
@@ -276,33 +312,39 @@ header {
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, rgba(0, 255, 249, .02) 1px, transparent 1px) 0 0/40px 40px, linear-gradient(0deg, rgba(0, 255, 249, .02) 1px, transparent 1px) 0 0/40px 40px;
+  pointer-events: none;
 }
 
 #drop-zone {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 580px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 12px;
 }
 
 .cwrap {
   position: relative;
-  display: inline-block;
-  max-width: 580px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 #main-canvas {
   display: block;
   max-width: 100%;
-  max-height: 440px;
+  max-height: 100%;
   width: auto;
   height: auto;
-  image-rendering: pixelated;
+  image-rendering: auto; /* Smoother scaling for large images */
+  box-shadow: 0 0 50px rgba(0,0,0,0.5);
 }
 
 #original-canvas {
@@ -347,14 +389,11 @@ header {
 
 .toolbar {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   position: relative;
   z-index: 10;
   flex-wrap: wrap;
   justify-content: center;
-  padding: 0 6px;
-  width: 100%;
-  max-width: 580px;
 }
 
 .btn {

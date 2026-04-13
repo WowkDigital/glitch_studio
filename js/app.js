@@ -25,12 +25,15 @@ export function init() {
   updateSpeedDisplay();
   setupEventListeners();
   setupDropZone();
+  loadDefaultImage();
 }
 
 function setupEventListeners() {
-  window.addToChain = (id) => {
+  window.addToChain = (id, append = false) => {
+    if (!append) effectChain = [];
     effectChain.push({ id, params: JSON.parse(JSON.stringify(DEFAULTS[id] || {})), label: LABELS[id] });
     updateChainUI();
+    if (!append) applyChain();
   };
 
   window.clearChain = () => {
@@ -71,7 +74,8 @@ function setupEventListeners() {
       const img = new Image();
       img.onload = () => {
         let w = img.width, h = img.height;
-        if (w > 1200) { h = h * 1200 / w; w = 1200; } if (h > 900) { w = w * 900 / h; h = 900; }
+        const maxW = 2000, maxH = 2000;
+        if (w > maxW) { h = h * maxW / w; w = maxW; } if (h > maxH) { w = w * maxH / h; h = maxH; }
         w = Math.round(w); h = Math.round(h);
         originalCanvas.width = mainCanvas.width = w;
         originalCanvas.height = mainCanvas.height = h;
@@ -79,7 +83,7 @@ function setupEventListeners() {
         originalImageData = octx.getImageData(0, 0, w, h);
         ctx.drawImage(img, 0, 0, w, h);
         document.getElementById('drop-ph').style.display = 'none';
-        document.getElementById('cwrap').style.display = 'inline-block';
+        document.getElementById('cwrap').style.display = 'flex';
         document.getElementById('toolbar').style.display = 'flex';
         document.getElementById('info-bar').textContent = `${w}×${h}px · ${file.name}`;
       };
@@ -104,6 +108,33 @@ function setupEventListeners() {
   window.updateSpeedDisplay = () => updateSpeedDisplay();
   window.downloadStatic = () => downloadStatic();
   window.startAnimExport = () => startAnimExport();
+}
+
+function loadDefaultImage() {
+  const imgPath = 'WD_logo.png';
+  const img = new Image();
+  img.onload = () => {
+    let w = img.width, h = img.height;
+    const maxW = 2000, maxH = 2000;
+    if (w > maxW) { h = h * maxW / w; w = maxW; } if (h > maxH) { w = w * maxH / h; h = maxH; }
+    w = Math.round(w); h = Math.round(h);
+    originalCanvas.width = mainCanvas.width = w;
+    originalCanvas.height = mainCanvas.height = h;
+    octx.drawImage(img, 0, 0, w, h);
+    originalImageData = octx.getImageData(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    document.getElementById('drop-ph').style.display = 'none';
+    document.getElementById('cwrap').style.display = 'flex';
+    document.getElementById('toolbar').style.display = 'flex';
+    document.getElementById('info-bar').textContent = `${w}×${h}px · ${imgPath} (System Default)`;
+    
+    // Automatically apply a subtle effect if needed, or just show the image
+    // applyChain(); 
+  };
+  img.onerror = () => {
+    console.warn('Default image WD_logo.png not found.');
+  };
+  img.src = imgPath;
 }
 
 function updateChainUI() {
@@ -234,7 +265,7 @@ async function startAnimExport() {
   if (!originalImageData || effectChain.length === 0) { alert('Upload an image and add effects!'); return; }
   if (animating) stopAnimate();
   const duration = parseInt(document.getElementById('gif-duration').value);
-  const fps = parseInt(document.getElementById('gif-fps').value);
+  const fps = parseInt(document.getElementById('anim-speed').value);
   const format = document.getElementById('gif-format').value;
   const totalFrames = duration * fps;
   const w = mainCanvas.width, h = mainCanvas.height;
