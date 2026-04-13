@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GLITCH//STUDIO v2 — WowkDigital</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">GLITCH<span>//</span>STUDIO <span style="font-size:10px;color:var(--ny);letter-spacing:1px">v2</span></div>
+    <div style="font-size:9px;color:var(--dim);letter-spacing:2px">CHAIN · SPEED · GIF EXPORT · WOWKDIGITAL</div>
+    <div class="hst">■ SYSTEM ONLINE</div>
+  </header>
+
+  <div class="app">
+    <!-- LEFT: Library -->
+    <div class="pl">
+      <div class="stitle">// EFFECTS LIBRARY</div>
+      <div style="font-size:8px;color:var(--dim)">click [＋] to add to chain →</div>
+
+      <div class="ecard" onclick="addToChain('rgb-split')"><div class="ename">RGB SPLIT <span class="add-btn">＋</span></div><div class="edesc">Chromatic aberration — R/G/B channel shift</div></div>
+      <div class="ecard" onclick="addToChain('scanlines')"><div class="ename">SCANLINES <span class="add-btn">＋</span></div><div class="edesc">Horizontal CRT lines with adjustable density</div></div>
+      <div class="ecard" onclick="addToChain('pixel-sort')"><div class="ename">PIXEL SORT <span class="add-btn">＋</span></div><div class="edesc">Sort pixels by brightness — databend style</div></div>
+      <div class="ecard" onclick="addToChain('data-corrupt')"><div class="ename">DATA CORRUPT <span class="add-btn">＋</span></div><div class="edesc">Data corruption blocks, corrupted file look</div></div>
+      <div class="ecard" onclick="addToChain('neon-burn')"><div class="ename">NEON BURN <span class="add-btn">＋</span></div><div class="edesc">Neon duotone + cyberpunk hue rotation</div></div>
+      <div class="ecard" onclick="addToChain('vhs')"><div class="ename">VHS TAPE <span class="add-btn">＋</span></div><div class="edesc">Magnetic noise, color bleed, old tape feel</div></div>
+      <div class="ecard" onclick="addToChain('hologram')"><div class="ename">HOLOGRAM <span class="add-btn">＋</span></div><div class="edesc">Interlace + holographic projection</div></div>
+      <div class="ecard" onclick="addToChain('noise')"><div class="ename">STATIC NOISE <span class="add-btn">＋</span></div><div class="edesc">Analog static noise grain</div></div>
+      <div class="ecard" onclick="addToChain('edge-glow')"><div class="ename">EDGE GLOW <span class="add-btn">＋</span></div><div class="edesc">Sobel edge detection + neon outline</div></div>
+      <div class="ecard" onclick="addToChain('all-glitch')"><div class="ename">FULL GLITCH <span class="add-btn">＋</span></div><div class="edesc">All effects at once — chaos overdrive</div></div>
+
+      <div class="divider"></div>
+      <div class="stitle">// PRESETS</div>
+      <div class="pgrid">
+        <button class="pbtn" onclick="applyPreset('vaporwave')">VAPORWAVE</button>
+        <button class="pbtn" onclick="applyPreset('matrix')">MATRIX</button>
+        <button class="pbtn" onclick="applyPreset('netpunk')">NETPUNK</button>
+        <button class="pbtn" onclick="applyPreset('ghost')">GHOST</button>
+        <button class="pbtn" onclick="applyPreset('corrupted')">CORRUPTED</button>
+        <button class="pbtn" onclick="applyPreset('retro-tv')">RETRO TV</button>
+      </div>
+    </div>
+
+    <!-- CENTER: Canvas -->
+    <div class="ca">
+      <div id="drop-zone">
+        <div class="drop-ph" id="drop-ph" onclick="document.getElementById('file-input').click()">
+          <span class="drop-icon">⬡</span>
+          <div class="drop-text">UPLOAD IMAGE</div>
+          <div class="drop-sub">click or drag · PNG / JPG / WEBP</div>
+        </div>
+        <canvas id="original-canvas"></canvas>
+        <div class="cwrap" id="cwrap" style="display:none">
+          <canvas id="main-canvas"></canvas>
+        </div>
+        <div class="toolbar" id="toolbar" style="display:none">
+          <button class="btn btn-c" onclick="applyChain()">▶ APPLY</button>
+          <button class="btn btn-m" id="animate-btn" onclick="toggleAnimate()">⟳ ANIMATE</button>
+          <button class="btn btn-c" onclick="resetImage()">↺ RESET</button>
+          <button class="btn btn-g" onclick="downloadStatic()">⬇ IMAGE</button>
+          <button class="btn btn-y" onclick="startAnimExport()">⬇ ANIM</button>
+          <button class="btn btn-r" onclick="clearImage()">✕</button>
+        </div>
+        <div id="export-progress">
+          <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+          <div class="prog-text" id="prog-text">RENDERING...</div>
+        </div>
+        <div class="info-bar" id="info-bar"></div>
+      </div>
+      <input type="file" id="file-input" accept="image/*" onchange="loadFile(this)">
+    </div>
+
+    <!-- RIGHT: Chain + Settings -->
+    <div class="pr">
+      <!-- CHAIN -->
+      <div class="stitle">// EFFECT CHAIN</div>
+      <div style="font-size:8px;color:var(--dim)">drag to reorder effects</div>
+      <div class="chain-list" id="chain-list">
+        <div class="chain-empty" id="chain-empty">no effects — add from library</div>
+      </div>
+      <button class="btn btn-r" style="font-size:9px;padding:4px 8px;align-self:flex-start;margin-top:-4px" onclick="clearChain()">✕ CLEAR</button>
+
+      <div class="divider"></div>
+
+      <!-- SPEED -->
+      <div class="stitle">// ANIMATION SPEED</div>
+      <div class="param-row">
+        <span class="param-label">TEMPO FPS</span>
+        <input type="range" id="anim-speed" min="1" max="60" value="12" step="1" oninput="updateSpeedDisplay()">
+        <span class="param-val" id="anim-speed-val">12</span>
+      </div>
+      <div class="speed-display" id="speed-display">12 FPS — SLOW</div>
+
+      <div style="font-size:8px;color:var(--dim);line-height:1.6">
+        1 FPS = very slow glitching<br>
+        60 FPS = real-time animation
+      </div>
+
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <label style="font-size:9px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="anim-mode" value="loop" checked style="accent-color:var(--nc)"> LOOP</label>
+        <label style="font-size:9px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="anim-mode" value="chain" style="accent-color:var(--nm)"> CHAIN STEP</label>
+        <label style="font-size:9px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="anim-mode" value="sweep" style="accent-color:var(--ny)"> SWEEP</label>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- EXPORT ANIM -->
+      <div class="stitle">// ANIMATION EXPORT</div>
+      <div class="param-row">
+        <span class="param-label">DURATION</span>
+        <input type="range" id="gif-duration" min="1" max="10" value="3" step="1" oninput="document.getElementById('gif-dur-val').textContent=this.value+'s'">
+        <span class="param-val" id="gif-dur-val">3s</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">EXPORT FPS</span>
+        <input type="range" id="gif-fps" min="5" max="30" value="12" step="1" oninput="document.getElementById('gif-fps-val').textContent=this.value">
+        <span class="param-val" id="gif-fps-val">12</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">FORMAT</span>
+        <select id="gif-format">
+          <option value="gif">GIF (animated)</option>
+          <option value="webm">WebM (video)</option>
+          <option value="frames">PNG frames (ZIP)</option>
+        </select>
+      </div>
+      <div style="font-size:8px;color:var(--dim);line-height:1.5">
+        GIF — universal · WebM — better quality<br>
+        PNG frames — for external editor
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- ACCENT + STATIC EXPORT -->
+      <div class="stitle">// ACCENT COLOR</div>
+      <div class="sw-row" id="accent-sw">
+        <div class="sw sel" style="background:#00fff9" onclick="selAccent(this,'#00fff9')"></div>
+        <div class="sw" style="background:#ff00ff" onclick="selAccent(this,'#ff00ff')"></div>
+        <div class="sw" style="background:#ff003c" onclick="selAccent(this,'#ff003c')"></div>
+        <div class="sw" style="background:#00ff41" onclick="selAccent(this,'#00ff41')"></div>
+        <div class="sw" style="background:#ffff00" onclick="selAccent(this,'#ffff00')"></div>
+        <div class="sw" style="background:#ff6600" onclick="selAccent(this,'#ff6600')"></div>
+        <div class="sw" style="background:#7700ff" onclick="selAccent(this,'#7700ff')"></div>
+        <div class="sw" style="background:#ffffff" onclick="selAccent(this,'#ffffff')"></div>
+      </div>
+
+      <div class="stitle">// STATIC EXPORT</div>
+      <div class="param-row">
+        <span class="param-label">FORMAT</span>
+        <select id="export-format"><option value="png">PNG</option><option value="jpeg">JPEG</option><option value="webp">WEBP</option></select>
+      </div>
+      <div class="param-row">
+        <span class="param-label">QUALITY</span>
+        <input type="range" id="export-quality" min="1" max="100" value="92" oninput="this.nextElementSibling.textContent=this.value+'%'">
+        <span class="param-val">92%</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- CHAIN PARAMS -->
+      <div class="stitle">// CHAIN PARAMETERS</div>
+      <div id="params-container" style="font-size:9px;color:var(--dim)">Add effects to chain</div>
+
+      <div style="margin-top:auto;padding-top:10px;font-size:8px;color:var(--dim);line-height:1.8;letter-spacing:1px">
+        GLITCH//STUDIO v2.0<br>© WOWKDIGITAL · WROCŁAW<br>100% CLIENT-SIDE · NO UPLOAD
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { init } from './js/app.js';
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
