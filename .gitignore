@@ -1,0 +1,14 @@
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+
+# Node (in case of future expansions)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
