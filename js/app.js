@@ -322,51 +322,75 @@ async function startAnimExport() {
 }
 
 async function exportMP4(totalFrames, fps, w, h, fill, text) {
-  text.textContent = 'LOADING MP4 ENCODER...';
-  try {
-    // We need to load the official build from unpkg
-    await loadScript('https://unpkg.com/h264-mp4-encoder/emscripten/index.js');
-    // Wait for the WASM module to be ready
-    await new Promise(r => {
-      const check = () => { if (window.H264MP4Encoder) r(); else setTimeout(check, 100); };
-      check();
-    });
-  } catch (e) {
-    text.textContent = 'MP4 Encoder failed to load.';
+  if (!window.VideoEncoder) {
+    text.textContent = 'MP4 EXPORT NOT SUPPORTED BY BROWSER';
+    setTimeout(() => { document.getElementById('export-progress').style.display = 'none'; }, 3000);
     return;
   }
 
-  const encoder = await window.H264MP4Encoder.create();
+  text.textContent = 'INITIALIZING MP4 ENCODER...';
   
-  // H264 requires even dimensions
-  const finalW = w % 2 === 0 ? w : w - 1;
-  const finalH = h % 2 === 0 ? h : h - 1;
+  try {
+    // Import mp4-muxer dynamically
+    const { Muxer, ArrayBufferTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@1.3.1/build/mp4-muxer.mjs');
 
-  encoder.width = finalW;
-  encoder.height = finalH;
-  encoder.frameRate = fps;
-  encoder.outputFilename = `glitch-${Date.now()}.mp4`;
-  encoder.initialize();
+    const finalW = w % 2 === 0 ? w : w - 1;
+    const finalH = h % 2 === 0 ? h : h - 1;
 
-  for (let f = 0; f < totalFrames; f++) {
-    const c = await renderFrameFull(f, finalW, finalH);
-    const ctx = c.getContext('2d');
-    const imgData = ctx.getImageData(0, 0, finalW, finalH);
-    encoder.addFrameRgba(imgData.data);
-    
-    fill.style.width = ((f + 1) / totalFrames * 100).toFixed(0) + '%';
-    text.textContent = `FRAME ${f + 1} / ${totalFrames} — MP4 ENCODING`;
-    await sleep(0);
+    let muxer = new Muxer({
+      target: new ArrayBufferTarget(),
+      video: {
+        codec: 'avc',
+        width: finalW,
+        height: finalH
+      },
+      fastStart: 'in-memory'
+    });
+
+    let videoEncoder = new VideoEncoder({
+      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      error: (e) => console.error(e)
+    });
+
+    videoEncoder.configure({
+      codec: 'avc1.42E01E', // Baseline profile
+      width: finalW,
+      height: finalH,
+      bitrate: 12_000_000,
+      framerate: fps
+    });
+
+    for (let f = 0; f < totalFrames; f++) {
+      const c = await renderFrameFull(f, finalW, finalH);
+      const frame = new VideoFrame(c, { timestamp: (f * 1_000_000 / fps) });
+      
+      videoEncoder.encode(frame, { keyFrame: f % 30 === 0 });
+      frame.close();
+
+      fill.style.width = ((f + 1) / totalFrames * 100).toFixed(0) + '%';
+      text.textContent = `ENCODING MP4: FRAME ${f + 1}/${totalFrames}`;
+      await sleep(0);
+    }
+
+    await videoEncoder.flush();
+    muxer.finalize();
+
+    const { buffer } = muxer.target;
+    const blob = new Blob([buffer], { type: 'video/mp4' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.download = `glitch-${Date.now()}.mp4`;
+    a.href = url;
+    a.click();
+
+    text.textContent = 'MP4 READY — DOWNLOADING!';
+    setTimeout(() => { URL.revokeObjectURL(url); document.getElementById('export-progress').style.display = 'none'; }, 3000);
+
+  } catch (e) {
+    console.error('MP4 Export Error:', e);
+    text.textContent = 'ERROR DURING MP4 EXPORT';
+    setTimeout(() => { document.getElementById('export-progress').style.display = 'none'; }, 3000);
   }
-
-  encoder.finalize();
-  const uint8Array = encoder.FS.readFile(encoder.outputFilename);
-  const blob = new Blob([uint8Array], { type: 'video/mp4' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.download = encoder.outputFilename; a.href = url; a.click();
-  
-  encoder.delete();
-  setTimeout(() => { URL.revokeObjectURL(url); document.getElementById('export-progress').style.display = 'none'; }, 3000);
 }
 
 async function renderFrameFull(f, w, h) {
