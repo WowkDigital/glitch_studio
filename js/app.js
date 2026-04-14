@@ -22,8 +22,8 @@ let libraryPreviewWorker = null; // We'll do it sequentially in main thread for 
 
 const originalCanvas = document.getElementById('original-canvas');
 const mainCanvas = document.getElementById('main-canvas');
-const octx = originalCanvas.getContext('2d');
-const ctx = mainCanvas.getContext('2d');
+const octx = originalCanvas.getContext('2d', { willReadFrequently: true });
+const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
 
 const chainListContainer = document.getElementById('chain-list');
 const paramsContainer = document.getElementById('params-container');
@@ -157,7 +157,7 @@ function setupEventListeners() {
 }
 
 const libPreviewCanvas = document.createElement('canvas');
-const libPX = libPreviewCanvas.getContext('2d');
+const libPX = libPreviewCanvas.getContext('2d', { willReadFrequently: true });
 
 function updateLibraryPreviews() {
   if (!livePreviewsEnabled || !previewImageData) return;
@@ -194,7 +194,7 @@ function updateLibraryPreviews() {
     const rng = mulberry32(12345); // Static RNG for consistent previews
     applyFx(previewData.data, previewData.width, previewData.height, id, DEFAULTS[id], rng, accentColor);
     
-    const pctx = canvas.getContext('2d');
+    const pctx = canvas.getContext('2d', { willReadFrequently: true });
     pctx.putImageData(previewData, 0, 0);
   });
 }
@@ -217,7 +217,7 @@ function processLoadedImage(img, name) {
   pw = Math.round(pw); ph = Math.round(ph);
 
   mainCanvas.width = pw; mainCanvas.height = ph;
-  const pctx = mainCanvas.getContext('2d');
+  const pctx = mainCanvas.getContext('2d', { willReadFrequently: true });
   pctx.drawImage(img, 0, 0, pw, ph);
   previewImageData = pctx.getImageData(0, 0, pw, ph);
 
@@ -393,7 +393,7 @@ function downloadStatic() {
   
   // Render full resolution for export
   const tempCanvas = document.createElement('canvas'); tempCanvas.width = w; tempCanvas.height = h;
-  const tx = tempCanvas.getContext('2d');
+  const tx = tempCanvas.getContext('2d', { willReadFrequently: true });
   tx.putImageData(originalImageData, 0, 0);
   const imgData = tx.getImageData(0, 0, w, h);
   effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, Math.random, accentColor));
@@ -430,7 +430,7 @@ async function exportMP4(totalFrames, fps, w, h, fill, text) {
   text.textContent = 'INITIALIZING MP4 ENCODER...';
   
   try {
-    const { Muxer, ArrayBufferTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@1.3.1/build/mp4-muxer.mjs');
+    const { Muxer, ArrayBufferTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@3.0.0/build/mp4-muxer.mjs');
 
     const finalW = w % 2 === 0 ? w : w - 1;
     const finalH = h % 2 === 0 ? h : h - 1;
@@ -453,22 +453,29 @@ async function exportMP4(totalFrames, fps, w, h, fill, text) {
       }
     });
 
-    // avc1.42E01E = Baseline @ Level 3.0
+    // avc1.4D4028 = Main Profile @ Level 4.0 (supports up to 2048x1024)
     videoEncoder.configure({
-      codec: 'avc1.42E01E', 
+      codec: 'avc1.4D4028', 
       width: finalW,
       height: finalH,
-      bitrate: 8_000_000, // Slightly lower bitrate for better compatibility
+      bitrate: 8_000_000,
       framerate: fps
     });
 
     for (let f = 0; f < totalFrames; f++) {
+      if (videoEncoder.state === 'closed') break;
       const c = await renderFrameFull(f, finalW, finalH);
       // IMPORTANT: Timestamp must be an integer (microseconds)
       const timestamp = Math.round(f * 1_000_000 / fps);
       const frame = new VideoFrame(c, { timestamp });
       
-      videoEncoder.encode(frame, { keyFrame: f % 30 === 0 });
+      try {
+        videoEncoder.encode(frame, { keyFrame: f % 30 === 0 });
+      } catch (e) {
+        console.error('Encode failed:', e);
+        frame.close();
+        break;
+      }
       frame.close();
 
       fill.style.width = ((f + 1) / totalFrames * 100).toFixed(0) + '%';
@@ -506,7 +513,7 @@ async function exportMP4(totalFrames, fps, w, h, fill, text) {
 
 async function renderFrameFull(f, w, h) {
   const tmpC = document.createElement('canvas'); tmpC.width = w; tmpC.height = h;
-  const tmpX = tmpC.getContext('2d');
+  const tmpX = tmpC.getContext('2d', { willReadFrequently: true });
   tmpX.putImageData(originalImageData, 0, 0);
   const imgData = tmpX.getImageData(0, 0, w, h);
   const rng = mulberry32(f * 7919 % 99991);
@@ -528,7 +535,7 @@ async function exportFrames(totalFrames, fps, w, h, fill, text) {
 
 async function exportWebM(totalFrames, fps, duration, w, h, fill, text) {
   const tmpC = document.createElement('canvas'); tmpC.width = w; tmpC.height = h;
-  const tmpX = tmpC.getContext('2d');
+  const tmpX = tmpC.getContext('2d', { willReadFrequently: true });
   const supported = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
   const stream = tmpC.captureStream(fps);
   const rec = new MediaRecorder(stream, { mimeType: supported, videoBitsPerSecond: 12000000 });

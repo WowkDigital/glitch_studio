@@ -90,9 +90,12 @@ header {
 .app {
   display: grid;
   grid-template-columns: 255px 1fr 285px;
+  grid-template-rows: minmax(0, 1fr);
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
+
 
 .pl, .pr {
   background: var(--panel);
@@ -101,7 +104,10 @@ header {
   display: flex;
   flex-direction: column;
   gap: 9px;
+  min-height: 0;
+  height: 100%;
 }
+
 
 .pl {
   border-right: 1px solid var(--bdr);
@@ -230,7 +236,9 @@ header {
   flex-direction: column;
   gap: 3px;
   min-height: 36px;
+  flex-shrink: 0;
 }
+
 
 .chain-item {
   background: var(--bg3);
@@ -319,6 +327,7 @@ header {
   position: relative;
   overflow: hidden;
   padding: 20px;
+  min-height: 0;
 }
 
 .ca::before {
