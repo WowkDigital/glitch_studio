@@ -151,6 +151,8 @@ function setupEventListeners() {
 
   window.toggleLivePreviews = (enabled) => {
     livePreviewsEnabled = enabled;
+    const grid = document.getElementById('effects-grid');
+    if (grid) grid.classList.toggle('live-mode', enabled);
     document.querySelectorAll('.ecard').forEach(el => el.classList.toggle('has-preview', enabled));
     if (enabled) updateLibraryPreviews();
   };

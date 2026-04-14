@@ -129,6 +129,31 @@ header {
   flex-shrink: 0;
 }
 
+.effects-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.effects-grid.live-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.effects-grid.live-mode .ecard {
+  padding: 6px;
+}
+
+.effects-grid.live-mode .ename {
+  font-size: 8px;
+  margin-bottom: 0;
+}
+
+.effects-grid.live-mode .edesc {
+  display: none;
+}
+
 .ecard {
   background: var(--bg3);
   border: 1px solid var(--bdr);

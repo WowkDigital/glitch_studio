@@ -40,16 +40,18 @@
         </label>
       </div>
 
-      <div class="ecard" onclick="addToChain('rgb-split')"><div class="ename">RGB SPLIT <span class="add-btn" onclick="event.stopPropagation(); addToChain('rgb-split', true)">＋</span></div><div class="edesc">Chromatic aberration — R/G/B channel shift</div></div>
-      <div class="ecard" onclick="addToChain('scanlines')"><div class="ename">SCANLINES <span class="add-btn" onclick="event.stopPropagation(); addToChain('scanlines', true)">＋</span></div><div class="edesc">Horizontal CRT lines with adjustable density</div></div>
-      <div class="ecard" onclick="addToChain('pixel-sort')"><div class="ename">PIXEL SORT <span class="add-btn" onclick="event.stopPropagation(); addToChain('pixel-sort', true)">＋</span></div><div class="edesc">Sort pixels by brightness — databend style</div></div>
-      <div class="ecard" onclick="addToChain('data-corrupt')"><div class="ename">DATA CORRUPT <span class="add-btn" onclick="event.stopPropagation(); addToChain('data-corrupt', true)">＋</span></div><div class="edesc">Data corruption blocks, corrupted file look</div></div>
-      <div class="ecard" onclick="addToChain('neon-burn')"><div class="ename">NEON BURN <span class="add-btn" onclick="event.stopPropagation(); addToChain('neon-burn', true)">＋</span></div><div class="edesc">Neon duotone + cyberpunk hue rotation</div></div>
-      <div class="ecard" onclick="addToChain('vhs')"><div class="ename">VHS TAPE <span class="add-btn" onclick="event.stopPropagation(); addToChain('vhs', true)">＋</span></div><div class="edesc">Magnetic noise, color bleed, old tape feel</div></div>
-      <div class="ecard" onclick="addToChain('hologram')"><div class="ename">HOLOGRAM <span class="add-btn" onclick="event.stopPropagation(); addToChain('hologram', true)">＋</span></div><div class="edesc">Interlace + holographic projection</div></div>
-      <div class="ecard" onclick="addToChain('noise')"><div class="ename">STATIC NOISE <span class="add-btn" onclick="event.stopPropagation(); addToChain('noise', true)">＋</span></div><div class="edesc">Analog static noise grain</div></div>
-      <div class="ecard" onclick="addToChain('edge-glow')"><div class="ename">EDGE GLOW <span class="add-btn" onclick="event.stopPropagation(); addToChain('edge-glow', true)">＋</span></div><div class="edesc">Sobel edge detection + neon outline</div></div>
-      <div class="ecard" onclick="addToChain('all-glitch')"><div class="ename">FULL GLITCH <span class="add-btn" onclick="event.stopPropagation(); addToChain('all-glitch', true)">＋</span></div><div class="edesc">All effects at once — chaos overdrive</div></div>
+      <div class="effects-grid" id="effects-grid">
+        <div class="ecard" onclick="addToChain('rgb-split')"><div class="ename">RGB SPLIT <span class="add-btn" onclick="event.stopPropagation(); addToChain('rgb-split', true)">＋</span></div><div class="edesc">Chromatic aberration — R/G/B channel shift</div></div>
+        <div class="ecard" onclick="addToChain('scanlines')"><div class="ename">SCANLINES <span class="add-btn" onclick="event.stopPropagation(); addToChain('scanlines', true)">＋</span></div><div class="edesc">Horizontal CRT lines with adjustable density</div></div>
+        <div class="ecard" onclick="addToChain('pixel-sort')"><div class="ename">PIXEL SORT <span class="add-btn" onclick="event.stopPropagation(); addToChain('pixel-sort', true)">＋</span></div><div class="edesc">Sort pixels by brightness — databend style</div></div>
+        <div class="ecard" onclick="addToChain('data-corrupt')"><div class="ename">DATA CORRUPT <span class="add-btn" onclick="event.stopPropagation(); addToChain('data-corrupt', true)">＋</span></div><div class="edesc">Data corruption blocks, corrupted file look</div></div>
+        <div class="ecard" onclick="addToChain('neon-burn')"><div class="ename">NEON BURN <span class="add-btn" onclick="event.stopPropagation(); addToChain('neon-burn', true)">＋</span></div><div class="edesc">Neon duotone + cyberpunk hue rotation</div></div>
+        <div class="ecard" onclick="addToChain('vhs')"><div class="ename">VHS TAPE <span class="add-btn" onclick="event.stopPropagation(); addToChain('vhs', true)">＋</span></div><div class="edesc">Magnetic noise, color bleed, old tape feel</div></div>
+        <div class="ecard" onclick="addToChain('hologram')"><div class="ename">HOLOGRAM <span class="add-btn" onclick="event.stopPropagation(); addToChain('hologram', true)">＋</span></div><div class="edesc">Interlace + holographic projection</div></div>
+        <div class="ecard" onclick="addToChain('noise')"><div class="ename">STATIC NOISE <span class="add-btn" onclick="event.stopPropagation(); addToChain('noise', true)">＋</span></div><div class="edesc">Analog static noise grain</div></div>
+        <div class="ecard" onclick="addToChain('edge-glow')"><div class="ename">EDGE GLOW <span class="add-btn" onclick="event.stopPropagation(); addToChain('edge-glow', true)">＋</span></div><div class="edesc">Sobel edge detection + neon outline</div></div>
+        <div class="ecard" onclick="addToChain('all-glitch')"><div class="ename">FULL GLITCH <span class="add-btn" onclick="event.stopPropagation(); addToChain('all-glitch', true)">＋</span></div><div class="edesc">All effects at once — chaos overdrive</div></div>
+      </div>
 
       <div class="divider"></div>
       <div class="stitle">// PRESETS</div>
