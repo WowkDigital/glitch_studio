@@ -79,7 +79,10 @@ export function renderParams(effectChain, container, options = {}) {
       const key = e.target.dataset.key;
       const val = parseInt(e.target.value);
       document.getElementById(`${e.target.id}-v`).textContent = val;
-      if (onParamChange) onParamChange(idx, key, val);
+      if (onParamChange) onParamChange(idx, key, val, false); // false = not committed yet
+    };
+    input.onchange = (e) => {
+      if (onParamChange) onParamChange(e.target.dataset.idx, e.target.dataset.key, parseInt(e.target.value), true); // true = committed
     };
   });
 }

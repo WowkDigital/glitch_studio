@@ -16,7 +16,12 @@
   <div class="top-bar">
     <div class="toolbar" id="toolbar" style="display:none">
       <button class="btn btn-c" onclick="applyChain()">▶ APPLY</button>
+      <div style="width:1px;height:16px;background:var(--bdr);margin:0 4px"></div>
+      <button class="btn btn-c" id="undo-btn" onclick="undo()" title="Undo (Ctrl+Z)" disabled>↶ UNDO</button>
+      <button class="btn btn-c" id="redo-btn" onclick="redo()" title="Redo (Ctrl+Shift+Z)" disabled>↷ REDO</button>
+      <div style="width:1px;height:16px;background:var(--bdr);margin:0 4px"></div>
       <button class="btn btn-m" id="animate-btn" onclick="toggleAnimate()">⟳ ANIMATE</button>
+
       <button class="btn btn-c" onclick="resetImage()">↺ RESET</button>
       <button class="btn btn-g" onclick="downloadStatic()">⬇ IMAGE</button>
       <button class="btn btn-y" onclick="startAnimExport()">⬇ ANIM</button>
@@ -28,7 +33,12 @@
     <!-- LEFT: Library -->
     <div class="pl">
       <div class="stitle">// EFFECTS LIBRARY</div>
-      <div style="font-size:8px;color:var(--dim)">click [＋] to add to chain →</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <div style="font-size:8px;color:var(--dim)">click [＋] to add to chain →</div>
+        <label style="font-size:8px;color:var(--nc);display:flex;align-items:center;gap:4px;cursor:pointer;background:rgba(0,255,249,0.05);padding:2px 5px;border-radius:2px">
+          <input type="checkbox" id="live-preview-toggle" onchange="toggleLivePreviews(this.checked)"> LIVE PREVIEW
+        </label>
+      </div>
 
       <div class="ecard" onclick="addToChain('rgb-split')"><div class="ename">RGB SPLIT <span class="add-btn" onclick="event.stopPropagation(); addToChain('rgb-split', true)">＋</span></div><div class="edesc">Chromatic aberration — R/G/B channel shift</div></div>
       <div class="ecard" onclick="addToChain('scanlines')"><div class="ename">SCANLINES <span class="add-btn" onclick="event.stopPropagation(); addToChain('scanlines', true)">＋</span></div><div class="edesc">Horizontal CRT lines with adjustable density</div></div>

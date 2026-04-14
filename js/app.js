@@ -1,6 +1,7 @@
 import { LABELS, DEFAULTS } from './config.js';
 import { applyFx, mulberry32 } from './effects.js';
 import { renderChain, renderParams } from './ui.js';
+import { TransactionManager } from './history.js';
 
 // Configuration
 const MAX_PREVIEW_RES = 800;
@@ -15,6 +16,9 @@ let originalImageData = null;
 let previewImageData = null;
 let effectChain = [];
 let frameCache = new Map(); // frameIndex -> ImageData
+let historyManager = null;
+let livePreviewsEnabled = false;
+let libraryPreviewWorker = null; // We'll do it sequentially in main thread for simplicity
 
 const originalCanvas = document.getElementById('original-canvas');
 const mainCanvas = document.getElementById('main-canvas');
@@ -26,6 +30,19 @@ const paramsContainer = document.getElementById('params-container');
 
 // Initialization
 export function init() {
+  historyManager = new TransactionManager(
+    { effectChain, accentColor },
+    (state) => {
+      effectChain = state.effectChain;
+      accentColor = state.accentColor;
+      syncAccentUI(accentColor);
+      clearFrameCache();
+      updateChainUI();
+      applyChain();
+      if (livePreviewsEnabled) updateLibraryPreviews();
+    }
+  );
+
   updateChainUI();
   updateSpeedDisplay();
   setupEventListeners();
@@ -37,6 +54,7 @@ function setupEventListeners() {
   window.addToChain = (id, append = false) => {
     if (!append) effectChain = [];
     effectChain.push({ id, params: JSON.parse(JSON.stringify(DEFAULTS[id] || {})), label: LABELS[id] });
+    historyManager.push({ effectChain, accentColor });
     clearFrameCache();
     updateChainUI();
     if (!append) applyChain();
@@ -44,8 +62,11 @@ function setupEventListeners() {
 
   window.clearChain = () => {
     effectChain = [];
+    historyManager.push({ effectChain, accentColor });
     clearFrameCache();
     updateChainUI();
+    applyChain(); // Clear visual state too
+    if (livePreviewsEnabled) updateLibraryPreviews();
   };
 
   window.applyPreset = (name) => {
@@ -62,17 +83,19 @@ function setupEventListeners() {
     effectChain = chain.map(c => ({ ...c, label: LABELS[c.id], params: { ...DEFAULTS[c.id], ...c.params } }));
     if (name === 'matrix') {
       accentColor = '#00ff41';
-      syncAccentUI('#00ff41');
     }
+    historyManager.push({ effectChain, accentColor });
+    syncAccentUI(accentColor);
     clearFrameCache();
     updateChainUI();
     applyChain();
+    if (livePreviewsEnabled) updateLibraryPreviews();
   };
 
   window.selAccent = (el, color) => {
-    document.querySelectorAll('.sw').forEach(s => s.classList.remove('sel'));
-    el.classList.add('sel');
     accentColor = color;
+    historyManager.push({ effectChain, accentColor });
+    syncAccentUI(color);
     clearFrameCache();
     if (!animating) applyChain();
   };
@@ -103,11 +126,77 @@ function setupEventListeners() {
     document.getElementById('file-input').value = '';
   };
 
+  window.undo = () => historyManager.undo();
+  window.redo = () => historyManager.redo();
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) window.redo();
+        else window.undo();
+      } else if (e.key === 'y') {
+        e.preventDefault();
+        window.redo();
+      }
+    }
+  });
+
   window.applyChain = () => applyChain();
   window.toggleAnimate = () => { if (animating) stopAnimate(); else startAnimate(); };
   window.updateSpeedDisplay = () => updateSpeedDisplay();
   window.downloadStatic = () => downloadStatic();
   window.startAnimExport = () => startAnimExport();
+
+  window.toggleLivePreviews = (enabled) => {
+    livePreviewsEnabled = enabled;
+    document.querySelectorAll('.ecard').forEach(el => el.classList.toggle('has-preview', enabled));
+    if (enabled) updateLibraryPreviews();
+  };
+}
+
+const libPreviewCanvas = document.createElement('canvas');
+const libPX = libPreviewCanvas.getContext('2d');
+
+function updateLibraryPreviews() {
+  if (!livePreviewsEnabled || !previewImageData) return;
+  
+  const w = mainCanvas.width, h = mainCanvas.height;
+  const thumbScale = 120 / Math.max(w, h);
+  const tw = Math.round(w * thumbScale), th = Math.round(h * thumbScale);
+
+  if (libPreviewCanvas.width !== tw || libPreviewCanvas.height !== th) {
+    libPreviewCanvas.width = tw; libPreviewCanvas.height = th;
+  }
+
+  // Create base thumbnail of CURRENT state (mainCanvas)
+  libPX.drawImage(mainCanvas, 0, 0, tw, th);
+  const baseData = libPX.getImageData(0, 0, tw, th);
+
+  document.querySelectorAll('.ecard').forEach(card => {
+    const id = card.getAttribute('onclick').match(/'([^']+)'/)[1];
+    let canvas = card.querySelector('.ecard-preview canvas');
+    if (!canvas) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'ecard-preview';
+      canvas = document.createElement('canvas');
+      wrapper.appendChild(canvas);
+      card.appendChild(wrapper);
+    }
+    
+    if (canvas.width !== tw || canvas.height !== th) {
+      canvas.width = tw; canvas.height = th;
+    }
+    
+    // Apply effect ON TOP of current state
+    const previewData = new ImageData(new Uint8ClampedArray(baseData.data), baseData.width, baseData.height);
+    const rng = mulberry32(12345); // Static RNG for consistent previews
+    applyFx(previewData.data, previewData.width, previewData.height, id, DEFAULTS[id], rng, accentColor);
+    
+    const pctx = canvas.getContext('2d');
+    pctx.putImageData(previewData, 0, 0);
+  });
 }
 
 function processLoadedImage(img, name) {
@@ -139,6 +228,7 @@ function processLoadedImage(img, name) {
   document.getElementById('cwrap').style.display = 'flex';
   document.getElementById('toolbar').style.display = 'flex';
   document.getElementById('info-bar').textContent = `${w}×${h}px [Preview: ${pw}×${ph}] · ${name}`;
+  if (livePreviewsEnabled) setTimeout(updateLibraryPreviews, 100);
 }
 
 function loadDefaultImage() {
@@ -157,23 +247,31 @@ function updateChainUI() {
   renderChain(effectChain, chainListContainer, {
     onRemove: (idx) => {
       effectChain.splice(idx, 1);
+      historyManager.push({ effectChain, accentColor });
       clearFrameCache();
       updateChainUI();
       applyChain();
+      if (livePreviewsEnabled) updateLibraryPreviews();
     },
     onReorder: (srcIdx, dstIdx) => {
       const [moved] = effectChain.splice(srcIdx, 1);
       const adjIdx = srcIdx < dstIdx ? dstIdx - 1 : dstIdx;
       effectChain.splice(adjIdx, 0, moved);
+      historyManager.push({ effectChain, accentColor });
       clearFrameCache();
       updateChainUI();
       applyChain();
+      if (livePreviewsEnabled) updateLibraryPreviews();
     }
   });
   renderParams(effectChain, paramsContainer, {
-    onParamChange: (idx, key, val) => {
+    onParamChange: (idx, key, val, isCommit) => {
       effectChain[idx].params[key] = val;
       clearFrameCache();
+      if (isCommit) {
+        historyManager.push({ effectChain, accentColor });
+        if (livePreviewsEnabled) updateLibraryPreviews();
+      }
       if (!animating) applyChain();
     }
   });
@@ -328,10 +426,10 @@ async function exportMP4(totalFrames, fps, w, h, fill, text) {
     return;
   }
 
+  console.log('Starting MP4 Export:', { totalFrames, fps, w, h });
   text.textContent = 'INITIALIZING MP4 ENCODER...';
   
   try {
-    // Import mp4-muxer dynamically
     const { Muxer, ArrayBufferTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@1.3.1/build/mp4-muxer.mjs');
 
     const finalW = w % 2 === 0 ? w : w - 1;
@@ -349,33 +447,45 @@ async function exportMP4(totalFrames, fps, w, h, fill, text) {
 
     let videoEncoder = new VideoEncoder({
       output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-      error: (e) => console.error(e)
+      error: (e) => {
+        console.error('VideoEncoder Error:', e);
+        text.textContent = 'ENCODER ERROR: ' + e.message;
+      }
     });
 
+    // avc1.42E01E = Baseline @ Level 3.0
     videoEncoder.configure({
-      codec: 'avc1.42E01E', // Baseline profile
+      codec: 'avc1.42E01E', 
       width: finalW,
       height: finalH,
-      bitrate: 12_000_000,
+      bitrate: 8_000_000, // Slightly lower bitrate for better compatibility
       framerate: fps
     });
 
     for (let f = 0; f < totalFrames; f++) {
       const c = await renderFrameFull(f, finalW, finalH);
-      const frame = new VideoFrame(c, { timestamp: (f * 1_000_000 / fps) });
+      // IMPORTANT: Timestamp must be an integer (microseconds)
+      const timestamp = Math.round(f * 1_000_000 / fps);
+      const frame = new VideoFrame(c, { timestamp });
       
       videoEncoder.encode(frame, { keyFrame: f % 30 === 0 });
       frame.close();
 
       fill.style.width = ((f + 1) / totalFrames * 100).toFixed(0) + '%';
       text.textContent = `ENCODING MP4: FRAME ${f + 1}/${totalFrames}`;
-      await sleep(0);
+      if (f % 5 === 0) await sleep(0); // Periodic yields to the UI
     }
 
+    console.log('Finalizing MP4 encoding...');
+    text.textContent = 'FINALIZING FILE...';
+    
     await videoEncoder.flush();
+    videoEncoder.close();
     muxer.finalize();
 
     const { buffer } = muxer.target;
+    if (!buffer || buffer.byteLength === 0) throw new Error('Generated MP4 buffer is empty');
+
     const blob = new Blob([buffer], { type: 'video/mp4' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -383,13 +493,14 @@ async function exportMP4(totalFrames, fps, w, h, fill, text) {
     a.href = url;
     a.click();
 
+    console.log('MP4 Download triggered successfully.');
     text.textContent = 'MP4 READY — DOWNLOADING!';
     setTimeout(() => { URL.revokeObjectURL(url); document.getElementById('export-progress').style.display = 'none'; }, 3000);
 
   } catch (e) {
-    console.error('MP4 Export Error:', e);
-    text.textContent = 'ERROR DURING MP4 EXPORT';
-    setTimeout(() => { document.getElementById('export-progress').style.display = 'none'; }, 3000);
+    console.error('MP4 Export Fatal Error:', e);
+    text.textContent = 'FATAL EXPORT ERROR';
+    setTimeout(() => { document.getElementById('export-progress').style.display = 'none'; }, 5000);
   }
 }
 
