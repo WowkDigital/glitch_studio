@@ -28,6 +28,10 @@ export function applyFx(d, w, h, id, p, rng, accentColor) {
   else if (id === 'hologram') fxHolo(d, w, h, p, accentColor);
   else if (id === 'noise') fxNoise(d, w, h, p, rng);
   else if (id === 'edge-glow') fxEdge(d, w, h, p, accentColor);
+  else if (id === 'invert') fxInvert(d, w, h, p, rng);
+  else if (id === 'posterize') fxPosterize(d, w, h, p);
+  else if (id === 'channel-swap') fxChannelSwap(d, w, h, p);
+  else if (id === 'smear') fxSmear(d, w, h, p);
   else if (id === 'all-glitch') fxAll(d, w, h, p, rng);
 }
 
@@ -277,5 +281,61 @@ function fxAll(d, w, h, p, rng) {
   }
   fxSL(d, w, h, { height: 2, gap: 4, opacity: 40 });
   fxNoise(d, w, h, { amount: 15, blend: 60 }, rng);
+}
+
+function fxInvert(d, w, h, p, rng) {
+  const amt = (p.amount ?? 100) / 100;
+  for (let i = 0; i < d.length; i += 4) {
+    if (rng() < amt) {
+      d[i] = 255 - d[i];
+      d[i+1] = 255 - d[i+1];
+      d[i+2] = 255 - d[i+2];
+    }
+  }
+}
+
+function fxPosterize(d, w, h, p) {
+  const lvl = Math.max(2, p.levels ?? 4);
+  const factor = 255 / (lvl - 1);
+  for (let i = 0; i < d.length; i += 4) {
+    d[i] = Math.round(d[i] / factor) * factor;
+    d[i+1] = Math.round(d[i+1] / factor) * factor;
+    d[i+2] = Math.round(d[i+2] / factor) * factor;
+  }
+}
+
+function fxChannelSwap(d, w, h, p) {
+  const mode = p.mode ?? 1;
+  const buf = getBuffer(d.length); buf.set(d);
+  for (let i = 0; i < d.length; i += 4) {
+    const r = buf[i], g = buf[i+1], b = buf[i+2];
+    if (mode === 1) { d[i] = g; d[i+1] = b; d[i+2] = r; }
+    else if (mode === 2) { d[i] = b; d[i+1] = r; d[i+2] = g; }
+    else if (mode === 3) { d[i] = r; d[i+1] = b; d[i+2] = g; }
+    else if (mode === 4) { d[i] = g; d[i+1] = r; d[i+2] = b; }
+    else if (mode === 5) { d[i] = b; d[i+1] = g; d[i+2] = r; }
+  }
+}
+
+function fxSmear(d, w, h, p) {
+  const thr = p.threshold ?? 200, len = p.length ?? 40;
+  const buf = getBuffer(d.length); buf.set(d);
+  for (let y = 0; y < h; y++) {
+    const yw = y * w;
+    let sr = 0, sg = 0, sb = 0;
+    for (let x = 0; x < w; x++) {
+      const i = (yw + x) * 4;
+      const r = buf[i], g = buf[i+1], b = buf[i+2];
+      const lum = .299*r + .587*g + .114*b;
+      if (lum > thr) { sr = r; sg = g; sb = b; }
+      else if (sr > 0 || sg > 0 || sb > 0) {
+        d[i] = Math.min(255, d[i] + sr * 0.5);
+        d[i+1] = Math.min(255, d[i+1] + sg * 0.5);
+        d[i+2] = Math.min(255, d[i+2] + sb * 0.5);
+        sr *= (1 - 1/len); sg *= (1 - 1/len); sb *= (1 - 1/len);
+        if (sr < 5 && sg < 5 && sb < 5) { sr = sg = sb = 0; }
+      }
+    }
+  }
 }
 

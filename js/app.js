@@ -57,7 +57,8 @@ function setupEventListeners() {
     historyManager.push({ effectChain, accentColor });
     clearFrameCache();
     updateChainUI();
-    if (!append) applyChain();
+    if (!animating) applyChain();
+    if (livePreviewsEnabled) updateLibraryPreviews();
   };
 
   window.clearChain = () => {
@@ -272,9 +273,9 @@ function updateChainUI() {
       clearFrameCache();
       if (isCommit) {
         historyManager.push({ effectChain, accentColor });
-        if (livePreviewsEnabled) updateLibraryPreviews();
       }
       if (!animating) applyChain();
+      if (livePreviewsEnabled) updateLibraryPreviews();
     }
   });
 }
@@ -311,13 +312,15 @@ function setupDropZone() {
 }
 
 function applyChain(seed) {
-  if (!previewImageData || effectChain.length === 0) return;
+  if (!previewImageData) return;
   const w = mainCanvas.width, h = mainCanvas.height;
   if (!window._glitchBuffer) window._glitchBuffer = ctx.createImageData(w, h);
   const imgData = window._glitchBuffer;
   imgData.data.set(previewImageData.data);
   const rng = seed !== undefined ? mulberry32(seed) : Math.random;
-  effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor));
+  if (effectChain.length > 0) {
+    effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor));
+  }
   ctx.putImageData(imgData, 0, 0);
 }
 

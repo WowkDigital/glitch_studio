@@ -8,6 +8,10 @@ export const LABELS = {
   'hologram': 'HOLOGRAM',
   'noise': 'STATIC NOISE',
   'edge-glow': 'EDGE GLOW',
+  'invert': 'INVERT',
+  'posterize': 'POSTERIZE',
+  'channel-swap': 'CHANNEL SWAP',
+  'smear': 'LIGHT SMEAR',
   'all-glitch': 'FULL GLITCH'
 };
 
@@ -21,6 +25,10 @@ export const DEFAULTS = {
   'hologram': { opacity: 70, lines: 3, shift: 5 },
   'noise': { amount: 25, color: 0, blend: 70 },
   'edge-glow': { threshold: 30, glow: 4, darkbg: 1 },
+  'invert': { amount: 100 },
+  'posterize': { levels: 4 },
+  'channel-swap': { mode: 1 },
+  'smear': { threshold: 200, length: 40 },
   'all-glitch': { intensity: 5 },
 };
 
@@ -68,6 +76,19 @@ export const PARAM_DEFS = {
   'edge-glow': [
     { k: 'threshold', l: 'THRESHOLD', mn: 0, mx: 100 },
     { k: 'glow', l: 'GLOW', mn: 0, mx: 20 }
+  ],
+  'invert': [
+    { k: 'amount', l: 'INTENSITY', mn: 0, mx: 100 }
+  ],
+  'posterize': [
+    { k: 'levels', l: 'LEVELS', mn: 2, mx: 16 }
+  ],
+  'channel-swap': [
+    { k: 'mode', l: 'MODE (1-5)', mn: 1, mx: 5 }
+  ],
+  'smear': [
+    { k: 'threshold', l: 'BRIGHTNESS', mn: 0, mx: 255 },
+    { k: 'length', l: 'LENGTH', mn: 0, mx: 200 }
   ],
   'all-glitch': [
     { k: 'intensity', l: 'CHAOS', mn: 0, mx: 10 }
