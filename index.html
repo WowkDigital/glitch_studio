@@ -70,6 +70,11 @@
         <button class="pbtn" onclick="applyPreset('terminal-error')">TERMINAL ERROR</button>
         <button class="pbtn" onclick="applyPreset('acid-trip')">ACID TRIP</button>
         <button class="pbtn" onclick="applyPreset('dark-web')">DARK WEB</button>
+        <button class="pbtn" onclick="applyPreset('golden-era')">GOLDEN ERA</button>
+        <button class="pbtn" onclick="applyPreset('blood-drive')">BLOOD DRIVE</button>
+        <button class="pbtn" onclick="applyPreset('dreamcore')">DREAMCORE</button>
+        <button class="pbtn" onclick="applyPreset('frozen-data')">FROZEN DATA</button>
+        <button class="pbtn" onclick="applyPreset('toxic-spill')">TOXIC SPILL</button>
       </div>
     </div>
 
@@ -80,6 +85,14 @@
           <span class="drop-icon">⬡</span>
           <div class="drop-text">UPLOAD IMAGE</div>
           <div class="drop-sub">click or drag · PNG / JPG / WEBP</div>
+
+          <div class="gallery-hint" onclick="event.stopPropagation()">
+            <div style="margin-top:20px;margin-bottom:10px;font-size:8px;letter-spacing:1px;color:var(--dim)">OR START WITH A SAMPLE:</div>
+            <div class="gallery-grid">
+                <div class="gitem" onclick="loadStockImage('images/WD_logo.png')"><img src="images/WD_logo.png"><span>LOGO</span></div>
+                <div class="gitem" onclick="loadStockImage('images/cyberpunk_city.jpg')"><img src="images/cyberpunk_city.jpg"><span>CYBER CITY</span></div>
+            </div>
+          </div>
         </div>
         <canvas id="original-canvas"></canvas>
         <div class="cwrap" id="cwrap" style="display:none">

@@ -701,3 +701,38 @@ select {
 #file-input {
   display: none;
 }
+
+.gallery-hint {
+  pointer-events: auto;
+}
+.gallery-grid {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.gitem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: .15s;
+}
+.gitem img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border: 1px solid var(--bdr);
+  border-radius: 2px;
+}
+.gitem span {
+  font-size: 8px;
+  color: var(--dim);
+}
+.gitem:hover img {
+  border-color: var(--nc);
+  box-shadow: 0 0 10px rgba(0, 255, 249, .3);
+}
+.gitem:hover span {
+  color: var(--nc);
+}

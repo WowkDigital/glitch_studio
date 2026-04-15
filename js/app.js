@@ -82,6 +82,11 @@ function setupEventListeners() {
       'terminal-error': [{ id: 'invert', params: { amount: 100 } }, { id: 'data-corrupt', params: { amount: 30, bh: 10, shift: 80, color: 0 } }, { id: 'noise', params: { amount: 40, blend: 50 } }, { id: 'scanlines', params: { height: 1, gap: 2, opacity: 70 } }],
       'acid-trip': [{ id: 'rgb-split', params: { x: 30, y: 15, intensity: 10, bands: 4 } }, { id: 'posterize', params: { levels: 3 } }, { id: 'smear', params: { threshold: 150, length: 120 } }, { id: 'noise', params: { amount: 20, blend: 80 } }],
       'dark-web': [{ id: 'hologram', params: { opacity: 40, lines: 4, shift: 10, speed: 5 } }, { id: 'pixel-sort', params: { lo: 20, hi: 100, dir: 0, chunk: 50 } }, { id: 'vhs', params: { noise: 50, jitter: 25, tracking: 10, bleed: 25 } }],
+      'golden-era': [{ id: 'neon-burn', params: { intensity: 6, hue: 45, sat: 120 } }, { id: 'smear', params: { threshold: 220, length: 30 } }, { id: 'noise', params: { amount: 15, blend: 40 } }],
+      'blood-drive': [{ id: 'edge-glow', params: { threshold: 15, glow: 12, darkbg: 1 } }, { id: 'rgb-split', params: { x: 5, y: 20, bands: 3, intensity: 8 } }, { id: 'posterize', params: { levels: 4 } }],
+      'dreamcore': [{ id: 'smear', params: { threshold: 160, length: 150, speed: 5 } }, { id: 'hologram', params: { opacity: 30, lines: 2, shift: 8, speed: 2 } }, { id: 'noise', params: { amount: 10, blend: 90, speed: 10 } }],
+      'frozen-data': [{ id: 'invert', params: { amount: 100 } }, { id: 'hologram', params: { opacity: 60, lines: 10, shift: 5, speed: 8 } }, { id: 'pixel-sort', params: { lo: 100, hi: 255, dir: 1, chunk: 40 } }],
+      'toxic-spill': [{ id: 'neon-burn', params: { intensity: 15, hue: 120, sat: 250, speed: 10 } }, { id: 'data-corrupt', params: { amount: 20, bh: 20, shift: 150, color: 1, speed: 5 } }],
     };
     const chain = presets[name];
     if (!chain) return;
@@ -90,8 +95,16 @@ function setupEventListeners() {
       accentColor = '#00ff41';
     } else if (name === 'cyber-psycho') {
       accentColor = '#ff00ff';
-    } else if (name === 'acid-trip') {
+    } else if (name === 'acid-trip' || name === 'dreamcore') {
       accentColor = '#7700ff';
+    } else if (name === 'blood-drive') {
+      accentColor = '#ff003c';
+    } else if (name === 'golden-era') {
+      accentColor = '#ffff00';
+    } else if (name === 'frozen-data') {
+      accentColor = '#00fff9';
+    } else if (name === 'toxic-spill') {
+      accentColor = '#00ff41';
     }
     historyManager.push({ effectChain, accentColor });
     syncAccentUI(accentColor);
@@ -120,6 +133,12 @@ function setupEventListeners() {
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+  };
+
+  window.loadStockImage = (path) => {
+    const img = new Image();
+    img.onload = () => processLoadedImage(img, path);
+    img.src = path;
   };
 
   window.resetImage = () => {
