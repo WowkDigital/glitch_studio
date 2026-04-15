@@ -78,12 +78,20 @@ function setupEventListeners() {
       ghost: [{ id: 'hologram', params: { opacity: 55, lines: 8, shift: 12 } }],
       corrupted: [{ id: 'data-corrupt', params: { amount: 40, bh: 15, shift: 120, color: 1 } }, { id: 'rgb-split', params: { x: 10, y: 3, bands: 8, intensity: 5 } }],
       'retro-tv': [{ id: 'vhs', params: { noise: 45, jitter: 20, tracking: 15, bleed: 20 } }, { id: 'scanlines', params: { height: 2, gap: 3, opacity: 50 } }],
+      'cyber-psycho': [{ id: 'edge-glow', params: { threshold: 25, glow: 8, darkbg: 1 } }, { id: 'channel-swap', params: { mode: 2 } }, { id: 'smear', params: { threshold: 180, length: 80 } }, { id: 'neon-burn', params: { intensity: 14, hue: 320, sat: 200 } }],
+      'terminal-error': [{ id: 'invert', params: { amount: 100 } }, { id: 'data-corrupt', params: { amount: 30, bh: 10, shift: 80, color: 0 } }, { id: 'noise', params: { amount: 40, blend: 50 } }, { id: 'scanlines', params: { height: 1, gap: 2, opacity: 70 } }],
+      'acid-trip': [{ id: 'rgb-split', params: { x: 30, y: 15, intensity: 10, bands: 4 } }, { id: 'posterize', params: { levels: 3 } }, { id: 'smear', params: { threshold: 150, length: 120 } }, { id: 'noise', params: { amount: 20, blend: 80 } }],
+      'dark-web': [{ id: 'hologram', params: { opacity: 40, lines: 4, shift: 10, speed: 5 } }, { id: 'pixel-sort', params: { lo: 20, hi: 100, dir: 0, chunk: 50 } }, { id: 'vhs', params: { noise: 50, jitter: 25, tracking: 10, bleed: 25 } }],
     };
     const chain = presets[name];
     if (!chain) return;
     effectChain = chain.map(c => ({ ...c, label: LABELS[c.id], params: { ...DEFAULTS[c.id], ...c.params } }));
-    if (name === 'matrix') {
+    if (name === 'matrix' || name === 'terminal-error') {
       accentColor = '#00ff41';
+    } else if (name === 'cyber-psycho') {
+      accentColor = '#ff00ff';
+    } else if (name === 'acid-trip') {
+      accentColor = '#7700ff';
     }
     historyManager.push({ effectChain, accentColor });
     syncAccentUI(accentColor);
@@ -114,7 +122,11 @@ function setupEventListeners() {
     reader.readAsDataURL(file);
   };
 
-  window.resetImage = () => { if (previewImageData) applyChain(); };
+  window.resetImage = () => {
+    if (!previewImageData) return;
+    stopAnimate();
+    window.clearChain();
+  };
   window.clearImage = () => {
     stopAnimate();
     originalImageData = null;
@@ -195,7 +207,7 @@ function updateLibraryPreviews() {
     // Apply effect ON TOP of current state
     const previewData = new ImageData(new Uint8ClampedArray(baseData.data), baseData.width, baseData.height);
     const rng = mulberry32(12345); // Static RNG for consistent previews
-    applyFx(previewData.data, previewData.width, previewData.height, id, DEFAULTS[id], rng, accentColor);
+    applyFx(previewData.data, previewData.width, previewData.height, id, DEFAULTS[id], rng, accentColor, 0);
     
     const pctx = canvas.getContext('2d', { willReadFrequently: true });
     pctx.putImageData(previewData, 0, 0);
@@ -319,7 +331,7 @@ function applyChain(seed) {
   imgData.data.set(previewImageData.data);
   const rng = seed !== undefined ? mulberry32(seed) : Math.random;
   if (effectChain.length > 0) {
-    effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor));
+    effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor, 0));
   }
   ctx.putImageData(imgData, 0, 0);
 }
@@ -357,16 +369,16 @@ function startAnimate() {
         const rng = mulberry32(animFrameCount * 7919 % 99991);
         
         if (mode === 'loop') {
-          effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor));
+          effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor, animFrameCount));
         } else if (mode === 'chain') {
           const stepIdx = animFrameCount % effectChain.length;
-          for (let i = 0; i <= stepIdx; i++) applyFx(imgData.data, w, h, effectChain[i].id, effectChain[i].params, rng, accentColor);
+          for (let i = 0; i <= stepIdx; i++) applyFx(imgData.data, w, h, effectChain[i].id, effectChain[i].params, rng, accentColor, animFrameCount);
         } else { // sweep
           const t = (animFrameCount % 120) / 120;
           const sweep = 0.05 + 0.95 * Math.abs(Math.sin(t * Math.PI));
           effectChain.forEach(item => {
             const sp = Object.fromEntries(Object.entries(item.params).map(([k, v]) => [k, v * sweep]));
-            applyFx(imgData.data, w, h, item.id, sp, rng, accentColor);
+            applyFx(imgData.data, w, h, item.id, sp, rng, accentColor, animFrameCount);
           });
         }
         ctx.putImageData(imgData, 0, 0);
@@ -401,7 +413,7 @@ function downloadStatic() {
   const tx = tempCanvas.getContext('2d', { willReadFrequently: true });
   tx.putImageData(originalImageData, 0, 0);
   const imgData = tx.getImageData(0, 0, w, h);
-  effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, Math.random, accentColor));
+  effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, Math.random, accentColor, 0));
   tx.putImageData(imgData, 0, 0);
   
   const mime = { png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp' }[fmt] || 'image/png';
@@ -522,7 +534,7 @@ async function renderFrameFull(f, w, h) {
   tmpX.putImageData(originalImageData, 0, 0);
   const imgData = tmpX.getImageData(0, 0, w, h);
   const rng = mulberry32(f * 7919 % 99991);
-  effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor));
+  effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor, f));
   tmpX.putImageData(imgData, 0, 0);
   return tmpC;
 }
@@ -550,7 +562,7 @@ async function exportWebM(totalFrames, fps, duration, w, h, fill, text) {
     tmpX.putImageData(originalImageData, 0, 0);
     const imgData = tmpX.getImageData(0, 0, w, h);
     const rng = mulberry32(f * 7919 % 99991);
-    effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor));
+    effectChain.forEach(item => applyFx(imgData.data, w, h, item.id, item.params, rng, accentColor, f));
     tmpX.putImageData(imgData, 0, 0);
     fill.style.width = ((f + 1) / totalFrames * 100).toFixed(0) + '%'; text.textContent = `ENCODING ${f + 1}/${totalFrames}`;
     await sleep(1000 / fps);
@@ -562,8 +574,8 @@ async function exportWebM(totalFrames, fps, duration, w, h, fill, text) {
 }
 
 async function exportGIF(totalFrames, fps, w, h, fill, text) {
-  try { await loadScript('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js'); } catch (e) { return; }
-  const gif = new GIF({ workers: 4, quality: 6, width: w, height: h, workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js', repeat: 0 });
+  try { await loadScript('js/vendor/gif.js'); } catch (e) { return; }
+  const gif = new GIF({ workers: 4, quality: 6, width: w, height: h, workerScript: 'js/vendor/gif.worker.js', repeat: 0 });
   const delay = Math.round(1000 / fps);
   for (let f = 0; f < totalFrames; f++) {
     const c = await renderFrameFull(f, w, h);

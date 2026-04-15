@@ -18,31 +18,34 @@ function getBuffer(size) {
   return sharedBuffer;
 }
 
-export function applyFx(d, w, h, id, p, rng, accentColor) {
-  if (id === 'rgb-split') fxRGB(d, w, h, p, rng);
-  else if (id === 'scanlines') fxSL(d, w, h, p);
-  else if (id === 'pixel-sort') fxPS(d, w, h, p);
-  else if (id === 'data-corrupt') fxDC(d, w, h, p, rng);
-  else if (id === 'neon-burn') fxNB(d, w, h, p, accentColor);
-  else if (id === 'vhs') fxVHS(d, w, h, p, rng);
-  else if (id === 'hologram') fxHolo(d, w, h, p, accentColor);
-  else if (id === 'noise') fxNoise(d, w, h, p, rng);
-  else if (id === 'edge-glow') fxEdge(d, w, h, p, accentColor);
+export function applyFx(d, w, h, id, p, rng, accentColor, time = 0) {
+  if (id === 'rgb-split') fxRGB(d, w, h, p, rng, time);
+  else if (id === 'scanlines') fxSL(d, w, h, p, time);
+  else if (id === 'pixel-sort') fxPS(d, w, h, p, time);
+  else if (id === 'data-corrupt') fxDC(d, w, h, p, rng, time);
+  else if (id === 'neon-burn') fxNB(d, w, h, p, accentColor, time);
+  else if (id === 'vhs') fxVHS(d, w, h, p, rng, time);
+  else if (id === 'hologram') fxHolo(d, w, h, p, accentColor, time);
+  else if (id === 'noise') fxNoise(d, w, h, p, rng, time);
+  else if (id === 'edge-glow') fxEdge(d, w, h, p, accentColor, time);
   else if (id === 'invert') fxInvert(d, w, h, p, rng);
-  else if (id === 'posterize') fxPosterize(d, w, h, p);
+  else if (id === 'posterize') fxPosterize(d, w, h, p, time);
   else if (id === 'channel-swap') fxChannelSwap(d, w, h, p);
-  else if (id === 'smear') fxSmear(d, w, h, p);
-  else if (id === 'all-glitch') fxAll(d, w, h, p, rng);
+  else if (id === 'smear') fxSmear(d, w, h, p, time);
+  else if (id === 'all-glitch') fxAll(d, w, h, p, rng, time);
 }
 
-function fxRGB(d, w, h, p, rng) {
-  const sx = p.x ?? 12, sy = p.y ?? 4, it = (p.intensity ?? 7) / 10, bn = Math.max(1, p.bands ?? 6);
+function fxRGB(d, w, h, p, rng, time = 0) {
+  const sx = p.x ?? 12, sy = p.y ?? 4, it = (p.intensity ?? 7) / 10, bn = Math.max(1, p.bands ?? 6), speed = (p.speed ?? 0) * 0.1;
   const buf = getBuffer(d.length); buf.set(d);
   const bh = Math.ceil(h / bn);
+  const tShiftX = speed > 0 ? Math.sin(time * speed) * sx : 0;
+  const tShiftY = speed > 0 ? Math.cos(time * speed) * sy : 0;
+
   for (let b = 0; b < bn; b++) {
     const rs = b * bh, re = Math.min(rs + bh, h);
-    const rx = Math.round((rng() > .5 ? 1 : -1) * sx * (0.5 + rng() * .5) * it);
-    const ry = Math.round((rng() > .5 ? 1 : -1) * sy * (0.5 + rng() * .5) * it);
+    const rx = Math.round(((rng() > .5 ? 1 : -1) * sx * (0.5 + rng() * .5) * it) + tShiftX);
+    const ry = Math.round(((rng() > .5 ? 1 : -1) * sy * (0.5 + rng() * .5) * it) + tShiftY);
     const gx = Math.round(-(rng() > .5 ? 1 : -1) * sx * .3 * it);
     for (let y = rs; y < re; y++) {
       const yw = y * w;
@@ -51,17 +54,17 @@ function fxRGB(d, w, h, p, rng) {
         const rx2 = x + rx, ry2 = y + ry;
         if (rx2 >= 0 && rx2 < w && ry2 >= 0 && ry2 < h) d[i] = buf[(ry2 * w + rx2) * 4];
         const gx2 = x + gx; if (gx2 >= 0 && gx2 < w) d[i + 1] = buf[(yw + gx2) * 4 + 1];
-        // d[i+2] already has blue
       }
     }
   }
 }
 
-function fxSL(d, w, h, p) {
-  const lh = Math.max(1, p.height ?? 2), gap = Math.max(1, p.gap ?? 4), op = (p.opacity ?? 60) / 100, per = lh + gap;
+function fxSL(d, w, h, p, time = 0) {
+  const lh = Math.max(1, p.height ?? 2), gap = Math.max(1, p.gap ?? 4), op = (p.opacity ?? 60) / 100, per = lh + gap, speed = (p.speed ?? 0) * 0.5;
   const f = 1 - op;
+  const offset = (time * speed) % per;
   for (let y = 0; y < h; y++) {
-    if (y % per < lh) {
+    if ((y + offset) % per < lh) {
       const yw4 = y * w * 4;
       for (let x = 0; x < w; x++) {
         const i = yw4 + x * 4;
@@ -71,8 +74,10 @@ function fxSL(d, w, h, p) {
   }
 }
 
-function fxPS(d, w, h, p) {
-  const lo = p.lo ?? 80, hi = p.hi ?? 200, hor = !(p.dir > 0.5), cp = (p.chunk ?? 30) / 100;
+function fxPS(d, w, h, p, time = 0) {
+  const speed = (p.speed ?? 0) * 0.05;
+  const pulse = speed > 0 ? Math.sin(time * speed) * 30 : 0;
+  const lo = Math.max(0, (p.lo ?? 80) + pulse), hi = p.hi ?? 200, hor = !(p.dir > 0.5), cp = (p.chunk ?? 30) / 100;
   const maxChunk = Math.round((hor ? w : h) * cp);
   function lm(i) { return .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2]; }
   
@@ -140,10 +145,13 @@ function fxPS(d, w, h, p) {
   }
 }
 
-function fxDC(d, w, h, p, rng) {
+function fxDC(d, w, h, p, rng, time = 0) {
+  const speed = (p.speed ?? 0) * 0.1;
   const amt = p.amount ?? 15, bh = p.bh ?? 8, sh = p.shift ?? 60, col = (p.color ?? 1) > .5;
+  const tShift = speed > 0 ? (Math.sin(time * speed) * sh * 0.5) : 0;
+  
   for (let i = 0; i < amt; i++) {
-    const y0 = Math.floor(rng() * h), dh = Math.ceil(rng() * bh), dx = Math.round((rng() - .5) * 2 * sh), cr = col ? Math.floor(rng() * 3) : -1;
+    const y0 = Math.floor(rng() * h), dh = Math.ceil(rng() * bh), dx = Math.round((rng() - .5) * 2 * sh + tShift), cr = col ? Math.floor(rng() * 3) : -1;
     for (let dy = 0; dy < dh && y0 + dy < h; dy++) {
       const yw = (y0 + dy) * w;
       for (let x = 0; x < w; x++) {
@@ -160,10 +168,11 @@ function fxDC(d, w, h, p, rng) {
   }
 }
 
-function fxNB(d, w, h, p, accentColor) {
-  const it = (p.intensity ?? 8) / 10, hs = p.hue ?? 180, sat = (p.sat ?? 180) / 100;
+function fxNB(d, w, h, p, accentColor, time = 0) {
+  const speed = (p.speed ?? 0) * 2.0;
+  const it = (p.intensity ?? 8) / 10, hs = (p.hue ?? 180) + (time * speed), sat = (p.sat ?? 180) / 100;
   const ar = parseInt(accentColor.slice(1, 3), 16), ag = parseInt(accentColor.slice(3, 5), 16), ab = parseInt(accentColor.slice(5, 7), 16);
-  const ang = hs * Math.PI / 180, cos = Math.cos(ang), sin = Math.sin(ang);
+  const ang = (hs % 360) * Math.PI / 180, cos = Math.cos(ang), sin = Math.sin(ang);
   
   const m1 = .213 + cos * .787 - sin * .213, m2 = .715 - cos * .715 - sin * .715, m3 = .072 - cos * .072 + sin * .928;
   const m4 = .213 - cos * .213 + sin * .143, m5 = .715 + cos * .285 + sin * .14, m6 = .072 - cos * .072 - sin * .283;
@@ -181,11 +190,13 @@ function fxNB(d, w, h, p, accentColor) {
   }
 }
 
-function fxVHS(d, w, h, p, rng) {
+function fxVHS(d, w, h, p, rng, time = 0) {
+  const speed = (p.speed ?? 0) * 0.1;
   const na = (p.noise ?? 30) / 100, jt = p.jitter ?? 10, tr = p.tracking ?? 5, bl = p.bleed ?? 10;
   const buf = getBuffer(d.length); buf.set(d);
   for (let y = 0; y < h; y++) {
-    const to = Math.round(Math.sin(y / (h / tr) + rng() * Math.PI) * jt);
+    const tMod = speed > 0 ? (time * speed) : 0;
+    const to = Math.round(Math.sin(y / (h / tr) + rng() * Math.PI + tMod) * (jt + (speed > 0 ? Math.sin(time*speed*0.5)*5 : 0)));
     const yw = y * w;
     for (let x = 0; x < w; x++) {
       const sx = Math.min(Math.max(x + to, 0), w - 1), src = (yw + sx) * 4, i = (yw + x) * 4;
@@ -201,8 +212,8 @@ function fxVHS(d, w, h, p, rng) {
   }
 }
 
-function fxHolo(d, w, h, p, accentColor) {
-  const op = (p.opacity ?? 70) / 100, ln = p.lines ?? 3, sh = p.shift ?? 5;
+function fxHolo(d, w, h, p, accentColor, time = 0) {
+  const op = (p.opacity ?? 70) / 100, ln = p.lines ?? 3, sh = p.shift ?? 5, speed = (p.speed ?? 0) * 0.1;
   const ar = parseInt(accentColor.slice(1, 3), 16), ag = parseInt(accentColor.slice(3, 5), 16), ab = parseInt(accentColor.slice(5, 7), 16);
   const per = Math.ceil(h / (ln * 2)), buf = getBuffer(d.length); buf.set(d);
   const invOp = 1 - op, op4 = op * .4, invOp4 = 1 - op4;
@@ -215,7 +226,7 @@ function fxHolo(d, w, h, p, accentColor) {
     d[i] = gy * ila + ar * la; d[i + 1] = gy * ila + ag * la; d[i + 2] = gy * ila + ab * la;
   }
   for (let y = 0; y < h; y += 2) {
-    const yw = y * w, shift = Math.round(sh * Math.sin(y * .05));
+    const yw = y * w, shift = Math.round(sh * Math.sin(y * .05 + time * speed));
     for (let x = 0; x < w; x++) {
       const srcX = Math.min(Math.max(x + shift, 0), w - 1);
       const src = (yw + srcX) * 4, dst = (yw + x) * 4;
@@ -224,8 +235,10 @@ function fxHolo(d, w, h, p, accentColor) {
   }
 }
 
-function fxNoise(d, w, h, p, rng) {
-  const amt = (p.amount ?? 25) / 100, col = (p.color ?? 0) > .5, bl = (p.blend ?? 70) / 100;
+function fxNoise(d, w, h, p, rng, time = 0) {
+  const speed = (p.speed ?? 0) * 0.1;
+  const pulse = speed > 0 ? (1.0 + 0.5 * Math.sin(time * speed)) : 1.0;
+  const amt = ((p.amount ?? 25) / 100) * pulse, col = (p.color ?? 0) > .5, bl = (p.blend ?? 70) / 100;
   const f = amt * bl, ifa = 1 - f;
   for (let i = 0; i < d.length; i += 4) {
     if (col) { 
@@ -237,7 +250,9 @@ function fxNoise(d, w, h, p, rng) {
   }
 }
 
-function fxEdge(d, w, h, p, accentColor) {
+function fxEdge(d, w, h, p, accentColor, time = 0) {
+  const speed = (p.speed ?? 0) * 0.1;
+  const pulse = speed > 0 ? (0.7 + 0.3 * Math.sin(time * speed)) : 1.0;
   const thr = (p.threshold ?? 30) / 100 * 255, dk = (p.darkbg ?? 1) > .5;
   const ar = parseInt(accentColor.slice(1, 3), 16), ag = parseInt(accentColor.slice(3, 5), 16), ab = parseInt(accentColor.slice(5, 7), 16);
   const buf = getBuffer(d.length); buf.set(d);
@@ -252,7 +267,7 @@ function fxEdge(d, w, h, p, accentColor) {
       const gx = -tl - 2 * ml - bl + tr + 2 * mr + br, gy = -tl - 2 * tc - tr + bl + 2 * bc + br;
       const mag = Math.sqrt(gx * gx + gy * gy), i = ycurr + x4;
       if (mag > thr) { 
-        const t = mag * .00392; 
+        const t = mag * .00392 * pulse; 
         const it = 1 - t;
         d[i] = ar * t + (dk ? 0 : buf[i]) * it; 
         d[i + 1] = ag * t + (dk ? 0 : buf[i + 1]) * it; 
@@ -263,10 +278,10 @@ function fxEdge(d, w, h, p, accentColor) {
   }
 }
 
-function fxAll(d, w, h, p, rng) {
+function fxAll(d, w, h, p, rng, time = 0) {
   const it = (p.intensity ?? 5) / 10;
   if (it === 0) return;
-  fxRGB(d, w, h, { x: 12 * it, y: 4 * it, intensity: (p.intensity ?? 5), bands: 6 }, rng);
+  fxRGB(d, w, h, { x: 12 * it, y: 4 * it, intensity: (p.intensity ?? 5), bands: 6, speed: 2 }, rng, time);
   const amt = Math.round(5 + it * 20), sh = Math.round(20 + it * 80), bh = Math.round(2 + it * 10);
   for (let i = 0; i < amt; i++) {
     const y0 = Math.floor(rng() * h), dx = Math.round((rng() - .5) * 2 * sh);
@@ -279,8 +294,8 @@ function fxAll(d, w, h, p, rng) {
       }
     }
   }
-  fxSL(d, w, h, { height: 2, gap: 4, opacity: 40 });
-  fxNoise(d, w, h, { amount: 15, blend: 60 }, rng);
+  fxSL(d, w, h, { height: 2, gap: 4, opacity: 40, speed: 5 }, time);
+  fxNoise(d, w, h, { amount: 15, blend: 60, speed: 5 }, rng, time);
 }
 
 function fxInvert(d, w, h, p, rng) {
@@ -294,8 +309,10 @@ function fxInvert(d, w, h, p, rng) {
   }
 }
 
-function fxPosterize(d, w, h, p) {
-  const lvl = Math.max(2, p.levels ?? 4);
+function fxPosterize(d, w, h, p, time = 0) {
+  const speed = (p.speed ?? 0) * 0.05;
+  const pulse = speed > 0 ? Math.round(Math.sin(time * speed) * 2) : 0;
+  const lvl = Math.max(2, (p.levels ?? 4) + pulse);
   const factor = 255 / (lvl - 1);
   for (let i = 0; i < d.length; i += 4) {
     d[i] = Math.round(d[i] / factor) * factor;
@@ -317,8 +334,10 @@ function fxChannelSwap(d, w, h, p) {
   }
 }
 
-function fxSmear(d, w, h, p) {
-  const thr = p.threshold ?? 200, len = p.length ?? 40;
+function fxSmear(d, w, h, p, time = 0) {
+  const speed = (p.speed ?? 0) * 0.1;
+  const pulse = speed > 0 ? (1.0 + 0.5 * Math.sin(time * speed)) : 1.0;
+  const thr = p.threshold ?? 200, len = (p.length ?? 40) * pulse;
   const buf = getBuffer(d.length); buf.set(d);
   for (let y = 0; y < h; y++) {
     const yw = y * w;
@@ -338,4 +357,3 @@ function fxSmear(d, w, h, p) {
     }
   }
 }
-
