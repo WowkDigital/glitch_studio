@@ -119,7 +119,7 @@ header {
 
 .stitle {
   font-family: 'Orbitron', monospace;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 3px;
   color: var(--nc);
   padding: 4px 0;
@@ -127,6 +127,9 @@ header {
   margin-bottom: 2px;
   text-transform: uppercase;
   flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .effects-grid {
@@ -174,7 +177,7 @@ header {
 
 .ename {
   font-family: 'Orbitron', monospace;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
   color: #ddd;
@@ -185,7 +188,7 @@ header {
 }
 
 .edesc {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
   line-height: 1.4;
 }
@@ -260,7 +263,7 @@ header {
 
 .chain-num {
   font-family: 'Orbitron', monospace;
-  font-size: 8px;
+  font-size: 10px;
   color: var(--nm);
   min-width: 12px;
   text-shadow: 0 0 4px var(--nm);
@@ -268,7 +271,7 @@ header {
 
 .chain-name {
   font-family: 'Orbitron', monospace;
-  font-size: 9px;
+  font-size: 10px;
   color: #ccc;
   flex: 1;
 }
@@ -392,7 +395,7 @@ header {
 
 .drop-text {
   font-family: 'Orbitron', monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 2px;
   color: var(--nc);
   text-shadow: 0 0 8px var(--nc);
@@ -400,7 +403,7 @@ header {
 }
 
 .drop-sub {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
 }
 
@@ -415,7 +418,7 @@ header {
 
 .btn {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1px;
   padding: 5px 10px;
   border: 1px solid;
@@ -498,7 +501,7 @@ header {
 }
 
 .prog-text {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--nm);
   text-align: center;
   letter-spacing: 1px;
@@ -513,14 +516,14 @@ header {
 }
 
 .param-label {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
   min-width: 82px;
   letter-spacing: .5px;
 }
 
 .param-val {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--ny);
   min-width: 28px;
   text-align: right;
@@ -597,7 +600,7 @@ select {
 
 .pbtn {
   font-family: 'Orbitron', monospace;
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 1px;
   padding: 6px 4px;
   border: 1px solid var(--bdr);
@@ -624,7 +627,7 @@ select {
 }
 
 .info-bar {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
   letter-spacing: 1px;
 }
@@ -635,14 +638,6 @@ select {
   animation: blink .8s infinite;
 }
 
-.pblock {
-  margin-bottom: 8px;
-  padding: 7px;
-  border: 1px solid rgba(255, 0, 255, .25);
-  border-radius: 2px;
-  background: rgba(255, 0, 255, .02);
-}
-
 .pblock-title {
   font-family: 'Orbitron', monospace;
   font-size: 8px;
@@ -650,6 +645,56 @@ select {
   letter-spacing: 1px;
   margin-bottom: 5px;
 }
+
+/* Export Section */
+.export-section {
+  border: 1px solid var(--bdr);
+  border-radius: 2px;
+  background: rgba(0, 255, 249, 0.02);
+  margin-top: 5px;
+}
+
+.export-section[open] {
+  background: rgba(0, 255, 249, 0.05);
+  border-color: var(--nc);
+}
+
+.export-section summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  user-select: none;
+}
+
+.export-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.export-section .stitle {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.export-section .toggle-icon {
+  font-size: 10px;
+  color: var(--nc);
+  transition: transform .2s;
+}
+
+.export-section[open] .toggle-icon {
+  transform: rotate(45deg);
+  color: var(--nm);
+}
+
+.export-content {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--bdr);
+}
+
 
 ::-webkit-scrollbar {
   width: 4px;

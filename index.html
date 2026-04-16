@@ -8,23 +8,19 @@
 </head>
 <body>
   <header>
-    <div class="logo">GLITCH<span>//</span>STUDIO <span style="font-size:10px;color:var(--ny);letter-spacing:1px">v2</span></div>
-    <div style="font-size:9px;color:var(--dim);letter-spacing:2px">CHAIN · SPEED · GIF EXPORT · WOWKDIGITAL</div>
+    <div class="logo">GLITCH<span>//</span>STUDIO <span style="font-size:11px;color:var(--ny);letter-spacing:1px">v2</span></div>
+    <div style="font-size:11px;color:var(--dim);letter-spacing:2px">CHAIN · SPEED · GIF EXPORT · WOWKDIGITAL</div>
     <div class="hst">■ SYSTEM ONLINE</div>
   </header>
 
   <div class="top-bar">
     <div class="toolbar" id="toolbar" style="display:none">
-      <button class="btn btn-c" onclick="applyChain()">▶ APPLY</button>
-      <div style="width:1px;height:16px;background:var(--bdr);margin:0 4px"></div>
       <button class="btn btn-c" id="undo-btn" onclick="undo()" title="Undo (Ctrl+Z)" disabled>↶ UNDO</button>
       <button class="btn btn-c" id="redo-btn" onclick="redo()" title="Redo (Ctrl+Shift+Z)" disabled>↷ REDO</button>
       <div style="width:1px;height:16px;background:var(--bdr);margin:0 4px"></div>
       <button class="btn btn-m" id="animate-btn" onclick="toggleAnimate()">⟳ ANIMATE</button>
 
       <button class="btn btn-c" onclick="resetImage()">↺ RESET</button>
-      <button class="btn btn-g" onclick="downloadStatic()">⬇ IMAGE</button>
-      <button class="btn btn-y" onclick="startAnimExport()">⬇ ANIM</button>
       <button class="btn btn-c" onclick="copyLink()" title="Copy settings link">🔗 LINK</button>
       <button class="btn btn-r" onclick="clearImage()">✕</button>
     </div>
@@ -35,8 +31,8 @@
     <div class="pl">
       <div class="stitle">// EFFECTS LIBRARY</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-        <div style="font-size:8px;color:var(--dim)">click [＋] to add to chain →</div>
-        <label style="font-size:8px;color:var(--nc);display:flex;align-items:center;gap:4px;cursor:pointer;background:rgba(0,255,249,0.05);padding:2px 5px;border-radius:2px">
+        <div style="font-size:10px;color:var(--dim)">click [＋] to add to chain →</div>
+        <label style="font-size:10px;color:var(--nc);display:flex;align-items:center;gap:4px;cursor:pointer;background:rgba(0,255,249,0.05);padding:2px 5px;border-radius:2px">
           <input type="checkbox" id="live-preview-toggle" onchange="toggleLivePreviews(this.checked)" checked> LIVE PREVIEW
         </label>
       </div>
@@ -113,7 +109,7 @@
     <div class="pr">
       <!-- CHAIN -->
       <div class="stitle">// EFFECT CHAIN</div>
-      <div style="font-size:8px;color:var(--dim)">drag to reorder effects</div>
+      <div style="font-size:10px;color:var(--dim)">drag to reorder effects</div>
       <div class="chain-list" id="chain-list">
         <div class="chain-empty" id="chain-empty">no effects — add from library</div>
       </div>
@@ -130,7 +126,7 @@
       </div>
       <div class="speed-display" id="speed-display">12 FPS — SLOW</div>
 
-      <div style="font-size:8px;color:var(--dim);line-height:1.6">
+      <div style="font-size:10px;color:var(--dim);line-height:1.6">
         1 FPS = very slow glitching<br>
         60 FPS = real-time animation
       </div>
@@ -143,60 +139,78 @@
 
       <div class="divider"></div>
 
-      <!-- EXPORT ANIM -->
-      <div class="stitle">// ANIMATION EXPORT</div>
-      <div class="param-row">
-        <span class="param-label">DURATION</span>
-        <input type="range" id="gif-duration" min="1" max="10" value="3" step="1" oninput="document.getElementById('gif-dur-val').textContent=this.value+'s'">
-        <span class="param-val" id="gif-dur-val">3s</span>
-      </div>
-      <div class="param-row">
-        <span class="param-label">FORMAT</span>
-        <select id="gif-format">
-          <option value="gif">GIF (animated)</option>
-          <option value="mp4">MP4 (video)</option>
-          <option value="webm">WebM (video)</option>
-          <option value="frames">PNG frames (ZIP)</option>
-        </select>
-      </div>
-      <div style="font-size:8px;color:var(--dim);line-height:1.5">
-        GIF — universal · WebM — better quality<br>
-        PNG frames — for external editor
-      </div>
+      <details class="export-section" open>
+        <summary><div class="stitle">// EXPORT & STYLING <span class="toggle-icon">＋</span></div></summary>
+        <div class="export-content">
+          <!-- ANIMATION EXPORT -->
+          <div>
+            <div class="stitle" style="border:none;margin-bottom:5px;font-size:10px;color:var(--dim)">// ANIMATION</div>
+            <div class="param-row">
+              <span class="param-label">DURATION</span>
+              <input type="range" id="gif-duration" min="1" max="10" value="10" step="1" oninput="document.getElementById('gif-dur-val').textContent=this.value+'s'">
+              <span class="param-val" id="gif-dur-val">10s</span>
+            </div>
+            <div class="param-row">
+              <span class="param-label">FORMAT</span>
+              <select id="gif-format">
+                <option value="gif">GIF (animated)</option>
+                <option value="mp4" selected>MP4 (video)</option>
+                <option value="webm">WebM (video)</option>
+                <option value="frames">PNG frames (ZIP)</option>
+              </select>
+            </div>
+          </div>
 
-      <div class="divider"></div>
+          <div class="divider"></div>
 
-      <!-- ACCENT + STATIC EXPORT -->
-      <div class="stitle">// ACCENT COLOR</div>
-      <div class="sw-row" id="accent-sw">
-        <div class="sw sel" style="background:#00fff9" onclick="selAccent(this,'#00fff9')"></div>
-        <div class="sw" style="background:#ff00ff" onclick="selAccent(this,'#ff00ff')"></div>
-        <div class="sw" style="background:#ff003c" onclick="selAccent(this,'#ff003c')"></div>
-        <div class="sw" style="background:#00ff41" onclick="selAccent(this,'#00ff41')"></div>
-        <div class="sw" style="background:#ffff00" onclick="selAccent(this,'#ffff00')"></div>
-        <div class="sw" style="background:#ff6600" onclick="selAccent(this,'#ff6600')"></div>
-        <div class="sw" style="background:#7700ff" onclick="selAccent(this,'#7700ff')"></div>
-        <div class="sw" style="background:#ffffff" onclick="selAccent(this,'#ffffff')"></div>
-      </div>
+          <!-- ACCENT COLOR -->
+          <div>
+            <div class="stitle" style="border:none;margin-bottom:5px;font-size:10px;color:var(--dim)">// ACCENT COLOR</div>
+            <div class="sw-row" id="accent-sw">
+              <div class="sw sel" style="background:#00fff9" onclick="selAccent(this,'#00fff9')"></div>
+              <div class="sw" style="background:#ff00ff" onclick="selAccent(this,'#ff00ff')"></div>
+              <div class="sw" style="background:#ff003c" onclick="selAccent(this,'#ff003c')"></div>
+              <div class="sw" style="background:#00ff41" onclick="selAccent(this,'#00ff41')"></div>
+              <div class="sw" style="background:#ffff00" onclick="selAccent(this,'#ffff00')"></div>
+              <div class="sw" style="background:#ff6600" onclick="selAccent(this,'#ff6600')"></div>
+              <div class="sw" style="background:#7700ff" onclick="selAccent(this,'#7700ff')"></div>
+              <div class="sw" style="background:#ffffff" onclick="selAccent(this,'#ffffff')"></div>
+            </div>
+          </div>
 
-      <div class="stitle">// STATIC EXPORT</div>
-      <div class="param-row">
-        <span class="param-label">FORMAT</span>
-        <select id="export-format"><option value="png">PNG</option><option value="jpeg">JPEG</option><option value="webp">WEBP</option></select>
-      </div>
-      <div class="param-row">
-        <span class="param-label">QUALITY</span>
-        <input type="range" id="export-quality" min="1" max="100" value="92" oninput="this.nextElementSibling.textContent=this.value+'%'">
-        <span class="param-val">92%</span>
-      </div>
+          <div class="divider"></div>
+
+          <!-- STATIC EXPORT -->
+          <div>
+            <div class="stitle" style="border:none;margin-bottom:5px;font-size:10px;color:var(--dim)">// STATIC IMAGE</div>
+            <div class="param-row">
+              <span class="param-label">FORMAT</span>
+              <select id="export-format"><option value="png">PNG</option><option value="jpeg">JPEG</option><option value="webp">WEBP</option></select>
+            </div>
+            <div class="param-row">
+              <span class="param-label">QUALITY</span>
+              <input type="range" id="export-quality" min="1" max="100" value="92" oninput="this.nextElementSibling.textContent=this.value+'%'">
+              <span class="param-val">92%</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- EXPORT ACTIONS -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:5px">
+            <button class="btn btn-g" style="padding:10px" onclick="downloadStatic()">⬇ DOWNLOAD IMAGE</button>
+            <button class="btn btn-y" style="padding:10px" onclick="startAnimExport()">⬇ EXPORT ANIM</button>
+          </div>
+        </div>
+      </details>
 
       <div class="divider"></div>
 
       <!-- CHAIN PARAMS -->
       <div class="stitle">// CHAIN PARAMETERS</div>
-      <div id="params-container" style="font-size:9px;color:var(--dim)">Add effects to chain</div>
+      <div id="params-container" style="font-size:11px;color:var(--dim)">Add effects to chain</div>
 
-      <div style="margin-top:20px;padding-top:10px;font-size:8px;color:var(--dim);line-height:1.8;letter-spacing:1px">
+      <div style="margin-top:20px;padding-top:10px;font-size:10px;color:var(--dim);line-height:1.8;letter-spacing:1px">
         GLITCH//STUDIO v2.0<br>© WOWKDIGITAL · WROCŁAW<br>100% CLIENT-SIDE · NO UPLOAD · <a href="https://wowkdigital.github.io/glitch_studio/" style="color:var(--nc);text-decoration:none;border-bottom:1px solid var(--nc)">VIEW LIVE</a>
       </div>
     </div>
