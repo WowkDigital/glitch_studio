@@ -1,4 +1,4 @@
-import { LABELS, DEFAULTS } from './config.js';
+import { LABELS, DEFAULTS, PRESETS, FX_LIST, FX_MAP, PARAM_DEFS } from './config.js';
 import { applyFx, mulberry32 } from './effects.js';
 import { renderChain, renderParams } from './ui.js';
 import { TransactionManager } from './history.js';
@@ -17,7 +17,7 @@ let previewImageData = null;
 let effectChain = [];
 let frameCache = new Map(); // frameIndex -> ImageData
 let historyManager = null;
-let livePreviewsEnabled = false;
+let livePreviewsEnabled = true;
 let libraryPreviewWorker = null; // We'll do it sequentially in main thread for simplicity
 
 const originalCanvas = document.getElementById('original-canvas');
@@ -40,6 +40,7 @@ export function init() {
       updateChainUI();
       applyChain();
       if (livePreviewsEnabled) updateLibraryPreviews();
+      updateURL();
     }
   );
 
@@ -48,10 +49,69 @@ export function init() {
   setupEventListeners();
   setupDropZone();
   loadDefaultImage();
+  toggleLivePreviews(true);
+  
+  // Try to load state from URL after a short delay (to ensure image is loaded if possible)
+  setTimeout(loadStateFromURL, 100);
+}
+
+function updateURL() {
+  try {
+    const compactChain = effectChain.map(item => {
+      const fxIdx = FX_MAP[item.id];
+      const defs = PARAM_DEFS[item.id] || [];
+      const vals = defs.map(d => item.params[d.k]);
+      return [fxIdx, vals];
+    });
+    const state = { v: 2, a: accentColor, c: compactChain };
+    const b64 = btoa(JSON.stringify(state));
+    window.history.replaceState(null, '', '#' + b64);
+  } catch (e) { console.error('URL Update failed', e); }
+}
+
+function loadStateFromURL() {
+  const hash = window.location.hash.substring(1);
+  if (!hash) return;
+  try {
+    const state = JSON.parse(atob(hash));
+    
+    // Support for NEW compact format (v2)
+    if (state.v === 2 && state.c) {
+      effectChain = state.c.map(item => {
+        const id = FX_LIST[item[0]];
+        const vals = item[1];
+        const defs = PARAM_DEFS[id] || [];
+        const params = { ...DEFAULTS[id] };
+        defs.forEach((d, i) => { if (vals[i] !== undefined) params[d.k] = vals[i]; });
+        return { id, label: LABELS[id] || id, params };
+      });
+    } 
+    // Fallback for OLD format (v1)
+    else if (state.c) {
+      effectChain = state.c.map(item => ({
+        id: item.i,
+        label: LABELS[item.i] || item.i,
+        params: { ...DEFAULTS[item.i], ...item.p }
+      }));
+    }
+
+    if (state.a) {
+      accentColor = state.a;
+      syncAccentUI(accentColor);
+    }
+    
+    historyManager.push({ effectChain, accentColor });
+    clearFrameCache();
+    updateChainUI();
+    applyChain();
+    if (livePreviewsEnabled) updateLibraryPreviews();
+  } catch (e) {
+    console.error('Failed to load state from URL', e);
+  }
 }
 
 function setupEventListeners() {
-  window.addToChain = (id, append = false) => {
+  window.addToChain = (id, append = true) => {
     if (!append) effectChain = [];
     effectChain.push({ id, params: JSON.parse(JSON.stringify(DEFAULTS[id] || {})), label: LABELS[id] });
     historyManager.push({ effectChain, accentColor });
@@ -59,6 +119,7 @@ function setupEventListeners() {
     updateChainUI();
     if (!animating) applyChain();
     if (livePreviewsEnabled) updateLibraryPreviews();
+    updateURL();
   };
 
   window.clearChain = () => {
@@ -68,50 +129,21 @@ function setupEventListeners() {
     updateChainUI();
     applyChain(); // Clear visual state too
     if (livePreviewsEnabled) updateLibraryPreviews();
+    updateURL();
   };
 
   window.applyPreset = (name) => {
-    const presets = {
-      vaporwave: [{ id: 'neon-burn', params: { intensity: 12, hue: 280, sat: 230 } }],
-      matrix: [{ id: 'edge-glow', params: { threshold: 20, glow: 10, darkbg: 1 } }],
-      netpunk: [{ id: 'rgb-split', params: { x: 20, y: 8, bands: 12, intensity: 9 } }, { id: 'scanlines', params: { height: 2, gap: 4, opacity: 40 } }],
-      ghost: [{ id: 'hologram', params: { opacity: 55, lines: 8, shift: 12 } }],
-      corrupted: [{ id: 'data-corrupt', params: { amount: 40, bh: 15, shift: 120, color: 1 } }, { id: 'rgb-split', params: { x: 10, y: 3, bands: 8, intensity: 5 } }],
-      'retro-tv': [{ id: 'vhs', params: { noise: 45, jitter: 20, tracking: 15, bleed: 20 } }, { id: 'scanlines', params: { height: 2, gap: 3, opacity: 50 } }],
-      'cyber-psycho': [{ id: 'edge-glow', params: { threshold: 25, glow: 8, darkbg: 1 } }, { id: 'channel-swap', params: { mode: 2 } }, { id: 'smear', params: { threshold: 180, length: 80 } }, { id: 'neon-burn', params: { intensity: 14, hue: 320, sat: 200 } }],
-      'terminal-error': [{ id: 'invert', params: { amount: 100 } }, { id: 'data-corrupt', params: { amount: 30, bh: 10, shift: 80, color: 0 } }, { id: 'noise', params: { amount: 40, blend: 50 } }, { id: 'scanlines', params: { height: 1, gap: 2, opacity: 70 } }],
-      'acid-trip': [{ id: 'rgb-split', params: { x: 30, y: 15, intensity: 10, bands: 4 } }, { id: 'posterize', params: { levels: 3 } }, { id: 'smear', params: { threshold: 150, length: 120 } }, { id: 'noise', params: { amount: 20, blend: 80 } }],
-      'dark-web': [{ id: 'hologram', params: { opacity: 40, lines: 4, shift: 10, speed: 5 } }, { id: 'pixel-sort', params: { lo: 20, hi: 100, dir: 0, chunk: 50 } }, { id: 'vhs', params: { noise: 50, jitter: 25, tracking: 10, bleed: 25 } }],
-      'golden-era': [{ id: 'neon-burn', params: { intensity: 6, hue: 45, sat: 120 } }, { id: 'smear', params: { threshold: 220, length: 30 } }, { id: 'noise', params: { amount: 15, blend: 40 } }],
-      'blood-drive': [{ id: 'edge-glow', params: { threshold: 15, glow: 12, darkbg: 1 } }, { id: 'rgb-split', params: { x: 5, y: 20, bands: 3, intensity: 8 } }, { id: 'posterize', params: { levels: 4 } }],
-      'dreamcore': [{ id: 'smear', params: { threshold: 160, length: 150, speed: 5 } }, { id: 'hologram', params: { opacity: 30, lines: 2, shift: 8, speed: 2 } }, { id: 'noise', params: { amount: 10, blend: 90, speed: 10 } }],
-      'frozen-data': [{ id: 'invert', params: { amount: 100 } }, { id: 'hologram', params: { opacity: 60, lines: 10, shift: 5, speed: 8 } }, { id: 'pixel-sort', params: { lo: 100, hi: 255, dir: 1, chunk: 40 } }],
-      'toxic-spill': [{ id: 'neon-burn', params: { intensity: 15, hue: 120, sat: 250, speed: 10 } }, { id: 'data-corrupt', params: { amount: 20, bh: 20, shift: 150, color: 1, speed: 5 } }],
-    };
-    const chain = presets[name];
-    if (!chain) return;
-    effectChain = chain.map(c => ({ ...c, label: LABELS[c.id], params: { ...DEFAULTS[c.id], ...c.params } }));
-    if (name === 'matrix' || name === 'terminal-error') {
-      accentColor = '#00ff41';
-    } else if (name === 'cyber-psycho') {
-      accentColor = '#ff00ff';
-    } else if (name === 'acid-trip' || name === 'dreamcore') {
-      accentColor = '#7700ff';
-    } else if (name === 'blood-drive') {
-      accentColor = '#ff003c';
-    } else if (name === 'golden-era') {
-      accentColor = '#ffff00';
-    } else if (name === 'frozen-data') {
-      accentColor = '#00fff9';
-    } else if (name === 'toxic-spill') {
-      accentColor = '#00ff41';
-    }
+    const preset = PRESETS[name];
+    if (!preset) return;
+    effectChain = preset.chain.map(c => ({ ...c, label: LABELS[c.id], params: { ...DEFAULTS[c.id], ...c.params } }));
+    accentColor = preset.accent;
     historyManager.push({ effectChain, accentColor });
     syncAccentUI(accentColor);
     clearFrameCache();
     updateChainUI();
     applyChain();
     if (livePreviewsEnabled) updateLibraryPreviews();
+    updateURL();
   };
 
   window.selAccent = (el, color) => {
@@ -120,6 +152,7 @@ function setupEventListeners() {
     syncAccentUI(color);
     clearFrameCache();
     if (!animating) applyChain();
+    updateURL();
   };
 
   window.loadFile = (input) => {
@@ -180,12 +213,48 @@ function setupEventListeners() {
   window.updateSpeedDisplay = () => updateSpeedDisplay();
   window.downloadStatic = () => downloadStatic();
   window.startAnimExport = () => startAnimExport();
+  window.copyLink = () => {
+    const url = window.location.href;
+    const btn = document.querySelector('button[onclick="copyLink()"]');
+    const oldText = btn.textContent;
+
+    const success = () => {
+      btn.textContent = '✓ COPIED';
+      setTimeout(() => btn.textContent = oldText, 2000);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(success).catch(() => fallbackCopy(url, success));
+    } else {
+      fallbackCopy(url, success);
+    }
+  };
+
+  function fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      if (cb) cb();
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+    }
+    document.body.removeChild(ta);
+  }
 
   window.toggleLivePreviews = (enabled) => {
     livePreviewsEnabled = enabled;
-    const grid = document.getElementById('effects-grid');
-    if (grid) grid.classList.toggle('live-mode', enabled);
+    const fxGrid = document.getElementById('effects-grid');
+    if (fxGrid) fxGrid.classList.toggle('live-mode', enabled);
+    const pGrid = document.getElementById('preset-grid');
+    if (pGrid) pGrid.classList.toggle('live-mode', enabled);
+    
     document.querySelectorAll('.ecard').forEach(el => el.classList.toggle('has-preview', enabled));
+    document.querySelectorAll('.pcard').forEach(el => el.classList.toggle('has-preview', enabled));
+    
     if (enabled) updateLibraryPreviews();
   };
 }
@@ -204,9 +273,9 @@ function updateLibraryPreviews() {
     libPreviewCanvas.width = tw; libPreviewCanvas.height = th;
   }
 
-  // Create base thumbnail of CURRENT state (mainCanvas)
+  // Effect Previews
   libPX.drawImage(mainCanvas, 0, 0, tw, th);
-  const baseData = libPX.getImageData(0, 0, tw, th);
+  const baseDataEffects = libPX.getImageData(0, 0, tw, th);
 
   document.querySelectorAll('.ecard').forEach(card => {
     const id = card.getAttribute('onclick').match(/'([^']+)'/)[1];
@@ -219,15 +288,39 @@ function updateLibraryPreviews() {
       card.appendChild(wrapper);
     }
     
-    if (canvas.width !== tw || canvas.height !== th) {
-      canvas.width = tw; canvas.height = th;
+    if (canvas.width !== tw || canvas.height !== th) { canvas.width = tw; canvas.height = th; }
+    const previewData = new ImageData(new Uint8ClampedArray(baseDataEffects.data), baseDataEffects.width, baseDataEffects.height);
+    applyFx(previewData.data, previewData.width, previewData.height, id, DEFAULTS[id], mulberry32(12345), accentColor, 0);
+    const pctx = canvas.getContext('2d', { willReadFrequently: true });
+    pctx.putImageData(previewData, 0, 0);
+  });
+
+  // Preset Previews (Show what happens IF you apply the preset to ORIGINAL)
+  const pbC = document.createElement('canvas'); pbC.width = tw; pbC.height = th;
+  const pbX = pbC.getContext('2d');
+  pbX.drawImage(originalCanvas, 0, 0, tw, th);
+  const baseDataPresets = pbX.getImageData(0, 0, tw, th);
+
+  document.querySelectorAll('.pcard').forEach(card => {
+    const name = card.getAttribute('onclick').match(/'([^']+)'/)[1];
+    const preset = PRESETS[name];
+    if (!preset) return;
+
+    let canvas = card.querySelector('.pcard-preview canvas');
+    if (!canvas) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'pcard-preview';
+      canvas = document.createElement('canvas');
+      wrapper.appendChild(canvas);
+      card.appendChild(wrapper);
     }
     
-    // Apply effect ON TOP of current state
-    const previewData = new ImageData(new Uint8ClampedArray(baseData.data), baseData.width, baseData.height);
-    const rng = mulberry32(12345); // Static RNG for consistent previews
-    applyFx(previewData.data, previewData.width, previewData.height, id, DEFAULTS[id], rng, accentColor, 0);
-    
+    if (canvas.width !== tw || canvas.height !== th) { canvas.width = tw; canvas.height = th; }
+    const previewData = new ImageData(new Uint8ClampedArray(baseDataPresets.data), baseDataPresets.width, baseDataPresets.height);
+    const rng = mulberry32(12345);
+    preset.chain.forEach(item => {
+      applyFx(previewData.data, previewData.width, previewData.height, item.id, item.params, rng, preset.accent, 0);
+    });
     const pctx = canvas.getContext('2d', { willReadFrequently: true });
     pctx.putImageData(previewData, 0, 0);
   });
@@ -266,7 +359,7 @@ function processLoadedImage(img, name) {
 }
 
 function loadDefaultImage() {
-  const imgPath = 'WD_logo.png';
+  const imgPath = 'images/WD_logo.png';
   const img = new Image();
   img.onload = () => {
     processLoadedImage(img, imgPath + ' (System Default)');
@@ -307,6 +400,7 @@ function updateChainUI() {
       }
       if (!animating) applyChain();
       if (livePreviewsEnabled) updateLibraryPreviews();
+      updateURL();
     }
   });
 }

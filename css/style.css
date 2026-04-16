@@ -220,39 +220,8 @@ header {
   opacity: 1;
 }
 
-.add-btn {
-  font-size: 14px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 2px;
-  opacity: 0;
-  transition: all .15s ease;
-  cursor: pointer;
-  line-height: 1;
-}
-
 .ecard:hover .add-btn {
   opacity: 0.6;
-}
-
-.add-btn:hover {
-  opacity: 1 !important;
-  color: var(--ng);
-  background: rgba(0, 255, 65, 0.1);
-  border-color: var(--ng);
-  box-shadow: 0 0 8px rgba(0, 255, 65, 0.2);
-  text-shadow: 0 0 5px var(--ng);
-}
-
-.add-btn:active {
-  transform: scale(0.92);
-  background: rgba(0, 255, 65, 0.2);
 }
 
 /* Chain */
@@ -733,6 +702,92 @@ select {
   border-color: var(--nc);
   box-shadow: 0 0 10px rgba(0, 255, 249, .3);
 }
-.gitem:hover span {
-  color: var(--nc);
+.ecard:hover .reset-btn {
+  opacity: 1;
 }
+
+.fx-reset-btn {
+  font-size: 11px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  opacity: 0;
+  transition: all .15s ease;
+  cursor: pointer;
+  line-height: 1;
+  position: relative;
+}
+
+.ecard:hover .fx-reset-btn, .pcard:hover .fx-reset-btn {
+  opacity: 0.6;
+}
+
+.fx-reset-btn:hover {
+  opacity: 1 !important;
+  color: var(--nr);
+  background: rgba(255, 0, 60, 0.1);
+  border-color: var(--nr);
+  box-shadow: 0 0 8px rgba(255, 0, 60, 0.2);
+}
+
+.fx-reset-btn::after {
+  content: 'RESET';
+  position: absolute;
+  top: -18px;
+  right: 0;
+  font-size: 7px;
+  background: var(--nr);
+  color: #fff;
+  padding: 1px 3px;
+  border-radius: 1px;
+  pointer-events: none;
+  opacity: 0;
+  transition: .1s;
+}
+
+.fx-reset-btn:hover::after {
+  opacity: 1;
+}
+
+.pgrid.live-mode {
+  grid-template-columns: 1fr 1fr;
+}
+
+.pcard {
+  background: var(--bg3);
+  border: 1px solid var(--bdr);
+  border-radius: 2px;
+  padding: 6px;
+  cursor: pointer;
+  transition: .15s;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.pcard:hover { border-color: var(--nc); }
+
+.pcard.has-preview .pcard-preview {
+  display: flex;
+  width: 100%;
+  aspect-ratio: 1/1;
+  margin-top: 5px;
+  border: 1px solid var(--bdr);
+  background: #000;
+}
+
+.pcard-preview canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.8;
+}
+
+.pcard:hover .pcard-preview canvas { opacity: 1; }

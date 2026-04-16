@@ -25,6 +25,7 @@
       <button class="btn btn-c" onclick="resetImage()">↺ RESET</button>
       <button class="btn btn-g" onclick="downloadStatic()">⬇ IMAGE</button>
       <button class="btn btn-y" onclick="startAnimExport()">⬇ ANIM</button>
+      <button class="btn btn-c" onclick="copyLink()" title="Copy settings link">🔗 LINK</button>
       <button class="btn btn-r" onclick="clearImage()">✕</button>
     </div>
   </div>
@@ -36,45 +37,45 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <div style="font-size:8px;color:var(--dim)">click [＋] to add to chain →</div>
         <label style="font-size:8px;color:var(--nc);display:flex;align-items:center;gap:4px;cursor:pointer;background:rgba(0,255,249,0.05);padding:2px 5px;border-radius:2px">
-          <input type="checkbox" id="live-preview-toggle" onchange="toggleLivePreviews(this.checked)"> LIVE PREVIEW
+          <input type="checkbox" id="live-preview-toggle" onchange="toggleLivePreviews(this.checked)" checked> LIVE PREVIEW
         </label>
       </div>
 
       <div class="effects-grid" id="effects-grid">
-        <div class="ecard" onclick="addToChain('rgb-split')"><div class="ename">RGB SPLIT <span class="add-btn" onclick="event.stopPropagation(); addToChain('rgb-split', true)">＋</span></div><div class="edesc">Chromatic aberration — R/G/B channel shift</div></div>
-        <div class="ecard" onclick="addToChain('scanlines')"><div class="ename">SCANLINES <span class="add-btn" onclick="event.stopPropagation(); addToChain('scanlines', true)">＋</span></div><div class="edesc">Horizontal CRT lines with adjustable density</div></div>
-        <div class="ecard" onclick="addToChain('pixel-sort')"><div class="ename">PIXEL SORT <span class="add-btn" onclick="event.stopPropagation(); addToChain('pixel-sort', true)">＋</span></div><div class="edesc">Sort pixels by brightness — databend style</div></div>
-        <div class="ecard" onclick="addToChain('data-corrupt')"><div class="ename">DATA CORRUPT <span class="add-btn" onclick="event.stopPropagation(); addToChain('data-corrupt', true)">＋</span></div><div class="edesc">Data corruption blocks, corrupted file look</div></div>
-        <div class="ecard" onclick="addToChain('neon-burn')"><div class="ename">NEON BURN <span class="add-btn" onclick="event.stopPropagation(); addToChain('neon-burn', true)">＋</span></div><div class="edesc">Neon duotone + cyberpunk hue rotation</div></div>
-        <div class="ecard" onclick="addToChain('vhs')"><div class="ename">VHS TAPE <span class="add-btn" onclick="event.stopPropagation(); addToChain('vhs', true)">＋</span></div><div class="edesc">Magnetic noise, color bleed, old tape feel</div></div>
-        <div class="ecard" onclick="addToChain('hologram')"><div class="ename">HOLOGRAM <span class="add-btn" onclick="event.stopPropagation(); addToChain('hologram', true)">＋</span></div><div class="edesc">Interlace + holographic projection</div></div>
-        <div class="ecard" onclick="addToChain('noise')"><div class="ename">STATIC NOISE <span class="add-btn" onclick="event.stopPropagation(); addToChain('noise', true)">＋</span></div><div class="edesc">Analog static noise grain</div></div>
-        <div class="ecard" onclick="addToChain('edge-glow')"><div class="ename">EDGE GLOW <span class="add-btn" onclick="event.stopPropagation(); addToChain('edge-glow', true)">＋</span></div><div class="edesc">Sobel edge detection + neon outline</div></div>
-        <div class="ecard" onclick="addToChain('invert')"><div class="ename">INVERT <span class="add-btn" onclick="event.stopPropagation(); addToChain('invert', true)">＋</span></div><div class="edesc">Color inversion + stochastic flip</div></div>
-        <div class="ecard" onclick="addToChain('posterize')"><div class="ename">POSTERIZE <span class="add-btn" onclick="event.stopPropagation(); addToChain('posterize', true)">＋</span></div><div class="edesc">Color depth reduction + bitcrush</div></div>
-        <div class="ecard" onclick="addToChain('channel-swap')"><div class="ename">CHANNEL SWAP <span class="add-btn" onclick="event.stopPropagation(); addToChain('channel-swap', true)">＋</span></div><div class="edesc">Swap and mismatch RGB channels</div></div>
-        <div class="ecard" onclick="addToChain('smear')"><div class="ename">LIGHT SMEAR <span class="add-btn" onclick="event.stopPropagation(); addToChain('smear', true)">＋</span></div><div class="edesc">Horizontal blend of bright pixels</div></div>
-        <div class="ecard" onclick="addToChain('all-glitch')"><div class="ename">FULL GLITCH <span class="add-btn" onclick="event.stopPropagation(); addToChain('all-glitch', true)">＋</span></div><div class="edesc">All effects at once — chaos overdrive</div></div>
+        <div class="ecard" onclick="addToChain('rgb-split')"><div class="ename">RGB SPLIT <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('rgb-split', false)">↺</span></div><div class="edesc">Chromatic aberration — R/G/B channel shift</div></div>
+        <div class="ecard" onclick="addToChain('scanlines')"><div class="ename">SCANLINES <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('scanlines', false)">↺</span></div><div class="edesc">Horizontal CRT lines with adjustable density</div></div>
+        <div class="ecard" onclick="addToChain('pixel-sort')"><div class="ename">PIXEL SORT <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('pixel-sort', false)">↺</span></div><div class="edesc">Sort pixels by brightness — databend style</div></div>
+        <div class="ecard" onclick="addToChain('data-corrupt')"><div class="ename">DATA CORRUPT <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('data-corrupt', false)">↺</span></div><div class="edesc">Data corruption blocks, corrupted file look</div></div>
+        <div class="ecard" onclick="addToChain('neon-burn')"><div class="ename">NEON BURN <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('neon-burn', false)">↺</span></div><div class="edesc">Neon duotone + cyberpunk hue rotation</div></div>
+        <div class="ecard" onclick="addToChain('vhs')"><div class="ename">VHS TAPE <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('vhs', false)">↺</span></div><div class="edesc">Magnetic noise, color bleed, old tape feel</div></div>
+        <div class="ecard" onclick="addToChain('hologram')"><div class="ename">HOLOGRAM <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('hologram', false)">↺</span></div><div class="edesc">Interlace + holographic projection</div></div>
+        <div class="ecard" onclick="addToChain('noise')"><div class="ename">STATIC NOISE <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('noise', false)">↺</span></div><div class="edesc">Analog static noise grain</div></div>
+        <div class="ecard" onclick="addToChain('edge-glow')"><div class="ename">EDGE GLOW <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('edge-glow', false)">↺</span></div><div class="edesc">Sobel edge detection + neon outline</div></div>
+        <div class="ecard" onclick="addToChain('invert')"><div class="ename">INVERT <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('invert', false)">↺</span></div><div class="edesc">Color inversion + stochastic flip</div></div>
+        <div class="ecard" onclick="addToChain('posterize')"><div class="ename">POSTERIZE <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('posterize', false)">↺</span></div><div class="edesc">Color depth reduction + bitcrush</div></div>
+        <div class="ecard" onclick="addToChain('channel-swap')"><div class="ename">CHANNEL SWAP <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('channel-swap', false)">↺</span></div><div class="edesc">Swap and mismatch RGB channels</div></div>
+        <div class="ecard" onclick="addToChain('smear')"><div class="ename">LIGHT SMEAR <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('smear', false)">↺</span></div><div class="edesc">Horizontal blend of bright pixels</div></div>
+        <div class="ecard" onclick="addToChain('all-glitch')"><div class="ename">FULL GLITCH <span class="fx-reset-btn" onclick="event.stopPropagation(); addToChain('all-glitch', false)">↺</span></div><div class="edesc">All effects at once — chaos overdrive</div></div>
       </div>
 
       <div class="divider"></div>
       <div class="stitle">// PRESETS</div>
-      <div class="pgrid">
-        <button class="pbtn" onclick="applyPreset('vaporwave')">VAPORWAVE</button>
-        <button class="pbtn" onclick="applyPreset('matrix')">MATRIX</button>
-        <button class="pbtn" onclick="applyPreset('netpunk')">NETPUNK</button>
-        <button class="pbtn" onclick="applyPreset('ghost')">GHOST</button>
-        <button class="pbtn" onclick="applyPreset('corrupted')">CORRUPTED</button>
-        <button class="pbtn" onclick="applyPreset('retro-tv')">RETRO TV</button>
-        <button class="pbtn" onclick="applyPreset('cyber-psycho')">CYBER-PSYCHO</button>
-        <button class="pbtn" onclick="applyPreset('terminal-error')">TERMINAL ERROR</button>
-        <button class="pbtn" onclick="applyPreset('acid-trip')">ACID TRIP</button>
-        <button class="pbtn" onclick="applyPreset('dark-web')">DARK WEB</button>
-        <button class="pbtn" onclick="applyPreset('golden-era')">GOLDEN ERA</button>
-        <button class="pbtn" onclick="applyPreset('blood-drive')">BLOOD DRIVE</button>
-        <button class="pbtn" onclick="applyPreset('dreamcore')">DREAMCORE</button>
-        <button class="pbtn" onclick="applyPreset('frozen-data')">FROZEN DATA</button>
-        <button class="pbtn" onclick="applyPreset('toxic-spill')">TOXIC SPILL</button>
+      <div class="pgrid" id="preset-grid">
+        <div class="pcard" onclick="applyPreset('vaporwave')"><div class="ename">VAPORWAVE</div></div>
+        <div class="pcard" onclick="applyPreset('matrix')"><div class="ename">MATRIX</div></div>
+        <div class="pcard" onclick="applyPreset('netpunk')"><div class="ename">NETPUNK</div></div>
+        <div class="pcard" onclick="applyPreset('ghost')"><div class="ename">GHOST</div></div>
+        <div class="pcard" onclick="applyPreset('corrupted')"><div class="ename">CORRUPTED</div></div>
+        <div class="pcard" onclick="applyPreset('retro-tv')"><div class="ename">RETRO TV</div></div>
+        <div class="pcard" onclick="applyPreset('cyber-psycho')"><div class="ename">CYBER-PSYCHO</div></div>
+        <div class="pcard" onclick="applyPreset('terminal-error')"><div class="ename">TERMINAL ERROR</div></div>
+        <div class="pcard" onclick="applyPreset('acid-trip')"><div class="ename">ACID TRIP</div></div>
+        <div class="pcard" onclick="applyPreset('dark-web')"><div class="ename">DARK WEB</div></div>
+        <div class="pcard" onclick="applyPreset('golden-era')"><div class="ename">GOLDEN ERA</div></div>
+        <div class="pcard" onclick="applyPreset('blood-drive')"><div class="ename">BLOOD DRIVE</div></div>
+        <div class="pcard" onclick="applyPreset('dreamcore')"><div class="ename">DREAMCORE</div></div>
+        <div class="pcard" onclick="applyPreset('frozen-data')"><div class="ename">FROZEN DATA</div></div>
+        <div class="pcard" onclick="applyPreset('toxic-spill')"><div class="ename">TOXIC SPILL</div></div>
       </div>
     </div>
 

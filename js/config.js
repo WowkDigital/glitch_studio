@@ -105,3 +105,24 @@ export const PARAM_DEFS = {
     { k: 'intensity', l: 'CHAOS', mn: 0, mx: 10 }
   ],
 };
+
+export const PRESETS = {
+  vaporwave: { chain: [{ id: 'neon-burn', params: { intensity: 12, hue: 280, sat: 230 } }], accent: '#00fff9' },
+  matrix: { chain: [{ id: 'edge-glow', params: { threshold: 20, glow: 10, darkbg: 1 } }], accent: '#00ff41' },
+  netpunk: { chain: [{ id: 'rgb-split', params: { x: 20, y: 8, bands: 12, intensity: 9 } }, { id: 'scanlines', params: { height: 2, gap: 4, opacity: 40 } }], accent: '#00fff9' },
+  ghost: { chain: [{ id: 'hologram', params: { opacity: 55, lines: 8, shift: 12 } }], accent: '#00fff9' },
+  corrupted: { chain: [{ id: 'data-corrupt', params: { amount: 40, bh: 15, shift: 120, color: 1 } }, { id: 'rgb-split', params: { x: 10, y: 3, bands: 8, intensity: 5 } }], accent: '#00fff9' },
+  'retro-tv': { chain: [{ id: 'vhs', params: { noise: 45, jitter: 20, tracking: 15, bleed: 20 } }, { id: 'scanlines', params: { height: 2, gap: 3, opacity: 50 } }], accent: '#00fff9' },
+  'cyber-psycho': { chain: [{ id: 'edge-glow', params: { threshold: 25, glow: 8, darkbg: 1 } }, { id: 'channel-swap', params: { mode: 2 } }, { id: 'smear', params: { threshold: 180, length: 80 } }, { id: 'neon-burn', params: { intensity: 14, hue: 320, sat: 200 } }], accent: '#ff00ff' },
+  'terminal-error': { chain: [{ id: 'invert', params: { amount: 100 } }, { id: 'data-corrupt', params: { amount: 30, bh: 10, shift: 80, color: 0 } }, { id: 'noise', params: { amount: 40, blend: 50 } }, { id: 'scanlines', params: { height: 1, gap: 2, opacity: 70 } }], accent: '#00ff41' },
+  'acid-trip': { chain: [{ id: 'rgb-split', params: { x: 30, y: 15, intensity: 10, bands: 4 } }, { id: 'posterize', params: { levels: 3 } }, { id: 'smear', params: { threshold: 150, length: 120 } }, { id: 'noise', params: { amount: 20, blend: 80 } }], accent: '#7700ff' },
+  'dark-web': { chain: [{ id: 'hologram', params: { opacity: 40, lines: 4, shift: 10, speed: 5 } }, { id: 'pixel-sort', params: { lo: 20, hi: 100, dir: 0, chunk: 50 } }, { id: 'vhs', params: { noise: 50, jitter: 25, tracking: 10, bleed: 25 } }], accent: '#00fff9' },
+  'golden-era': { chain: [{ id: 'neon-burn', params: { intensity: 6, hue: 45, sat: 120 } }, { id: 'smear', params: { threshold: 220, length: 30 } }, { id: 'noise', params: { amount: 15, blend: 40 } }], accent: '#ffff00' },
+  'blood-drive': { chain: [{ id: 'edge-glow', params: { threshold: 15, glow: 12, darkbg: 1 } }, { id: 'rgb-split', params: { x: 5, y: 20, bands: 3, intensity: 8 } }, { id: 'posterize', params: { levels: 4 } }], accent: '#ff003c' },
+  'dreamcore': { chain: [{ id: 'smear', params: { threshold: 160, length: 150, speed: 5 } }, { id: 'hologram', params: { opacity: 30, lines: 2, shift: 8, speed: 2 } }, { id: 'noise', params: { amount: 10, blend: 90, speed: 10 } }], accent: '#7700ff' },
+  'frozen-data': { chain: [{ id: 'invert', params: { amount: 100 } }, { id: 'hologram', params: { opacity: 60, lines: 10, shift: 5, speed: 8 } }, { id: 'pixel-sort', params: { lo: 100, hi: 255, dir: 1, chunk: 40 } }], accent: '#00fff9' },
+  'toxic-spill': { chain: [{ id: 'neon-burn', params: { intensity: 15, hue: 120, sat: 250, speed: 10 } }, { id: 'data-corrupt', params: { amount: 20, bh: 20, shift: 150, color: 1, speed: 5 } }], accent: '#00ff41' },
+};
+
+export const FX_LIST = Object.keys(LABELS);
+export const FX_MAP = Object.fromEntries(FX_LIST.map((id, idx) => [id, idx]));
