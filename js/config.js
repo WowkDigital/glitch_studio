@@ -12,6 +12,7 @@ export const LABELS = {
   'posterize': 'POSTERIZE',
   'channel-swap': 'CHANNEL SWAP',
   'smear': 'LIGHT SMEAR',
+  'vcr-osd': 'VCR OVERLAY',
   'all-glitch': 'FULL GLITCH'
 };
 
@@ -29,6 +30,7 @@ export const DEFAULTS = {
   'posterize': { levels: 4, speed: 0 },
   'channel-swap': { mode: 1 },
   'smear': { threshold: 200, length: 40, speed: 0 },
+  'vcr-osd': { opacity: 80, blink: 1 },
   'all-glitch': { intensity: 5 },
 };
 
@@ -103,6 +105,10 @@ export const PARAM_DEFS = {
     { k: 'length', l: 'LENGTH', mn: 0, mx: 200 },
     { k: 'speed', l: 'ANIM SPEED', mn: 0, mx: 20 }
   ],
+  'vcr-osd': [
+    { k: 'opacity', l: 'OPACITY', mn: 0, mx: 100 },
+    { k: 'blink', l: 'BLINK REC', mn: 0, mx: 1 }
+  ],
   'all-glitch': [
     { k: 'intensity', l: 'CHAOS', mn: 0, mx: 10 }
   ],
@@ -123,6 +129,7 @@ export const PRESETS = {
   'blood-drive': { chain: [{ id: 'edge-glow', params: { threshold: 15, glow: 12, darkbg: 1 } }, { id: 'rgb-split', params: { x: 5, y: 20, bands: 3, intensity: 8 } }, { id: 'posterize', params: { levels: 4 } }], accent: '#ff003c' },
   'dreamcore': { chain: [{ id: 'smear', params: { threshold: 160, length: 150, speed: 5 } }, { id: 'hologram', params: { opacity: 30, lines: 2, shift: 8, speed: 2 } }, { id: 'noise', params: { amount: 10, blend: 90, speed: 10 } }], accent: '#7700ff' },
   'frozen-data': { chain: [{ id: 'invert', params: { amount: 100 } }, { id: 'hologram', params: { opacity: 60, lines: 10, shift: 5, speed: 8 } }, { id: 'pixel-sort', params: { lo: 100, hi: 255, dir: 1, chunk: 40 } }], accent: '#00fff9' },
+  'handycam-2006': { chain: [{ id: 'vhs', params: { noise: 20, jitter: 15, roll: 0, desync: 10, bleed: 15, speed: 4 } }, { id: 'scanlines', params: { height: 1, gap: 2, opacity: 30 } }, { id: 'vcr-osd', params: { opacity: 90, blink: 1 } }], accent: '#ffffff' },
   'toxic-spill': { chain: [{ id: 'neon-burn', params: { intensity: 15, hue: 120, sat: 250, speed: 10 } }, { id: 'data-corrupt', params: { amount: 20, bh: 20, shift: 150, color: 1, speed: 5 } }], accent: '#00ff41' },
 };
 

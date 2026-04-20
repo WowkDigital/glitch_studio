@@ -32,7 +32,76 @@ export function applyFx(d, w, h, id, p, rng, accentColor, time = 0) {
   else if (id === 'posterize') fxPosterize(d, w, h, p, time);
   else if (id === 'channel-swap') fxChannelSwap(d, w, h, p);
   else if (id === 'smear') fxSmear(d, w, h, p, time);
+  else if (id === 'vcr-osd') fxVCR(d, w, h, p, time);
   else if (id === 'all-glitch') fxAll(d, w, h, p, rng, time);
+}
+
+let helperCanvas = null;
+let hctx = null;
+
+function fxVCR(d, w, h, p, time = 0) {
+  const op = (p.opacity ?? 80) / 100, blink = (p.blink ?? 1) > 0.5;
+  const now = new Date();
+  const year = now.getFullYear() - 20;
+  const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const dateStr = `${monthNames[now.getMonth()]} ${now.getDate().toString().padStart(2, '0')} ${year}`;
+  
+  const totalSec = Math.floor(time / 24); 
+  const hh = Math.floor(totalSec / 3600).toString().padStart(2, '0');
+  const mm = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+  const ss = (totalSec % 60).toString().padStart(2, '0');
+  const timeStr = `${hh}:${mm}:${ss}`;
+
+  const isBlink = blink && (Math.floor(time / 15) % 2 === 0);
+  
+  if (!helperCanvas || helperCanvas.width !== w || helperCanvas.height !== h) {
+    helperCanvas = document.createElement('canvas');
+    helperCanvas.width = w; helperCanvas.height = h;
+    hctx = helperCanvas.getContext('2d', { willReadFrequently: true });
+  }
+
+  hctx.clearRect(0, 0, w, h);
+  hctx.fillStyle = 'white';
+  hctx.font = `${Math.round(h * 0.08)}px "VT323"`; // Adaptive font size
+  hctx.textBaseline = 'top';
+
+  // Draw Timecode
+  hctx.textAlign = 'right';
+  hctx.fillText(timeStr, w * 0.95, h * 0.05);
+
+  // Draw Date
+  hctx.textAlign = 'right';
+  hctx.fillText(dateStr, w * 0.95, h * 0.85);
+
+  // Draw REC
+  if (isBlink) {
+    hctx.textAlign = 'left';
+    hctx.fillText("REC", w * 0.05, h * 0.05);
+    
+    // Red Dot
+    hctx.beginPath();
+    hctx.fillStyle = '#ff0000';
+    hctx.arc(w * 0.05 + hctx.measureText("REC").width + h * 0.04, h * 0.05 + h * 0.04, h * 0.02, 0, Math.PI * 2);
+    hctx.fill();
+    hctx.fillStyle = 'white';
+  }
+
+  // Draw PLAY
+  hctx.textAlign = 'left';
+  hctx.fillText("PLAY", w * 0.05, h * 0.85);
+
+  // Composite the helper canvas onto the data array
+  const overlayData = hctx.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < d.length; i += 4) {
+    const alpha = overlayData[i + 3];
+    if (alpha > 0) {
+      const f = (alpha / 255) * op;
+      const invF = 1 - f;
+      d[i] = d[i] * invF + overlayData[i] * f;
+      d[i+1] = d[i+1] * invF + overlayData[i+1] * f;
+      d[i+2] = d[i+2] * invF + overlayData[i+2] * f;
+    }
+  }
 }
 
 function fxRGB(d, w, h, p, rng, time = 0) {
