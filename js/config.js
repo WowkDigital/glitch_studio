@@ -21,7 +21,7 @@ export const DEFAULTS = {
   'pixel-sort': { lo: 80, hi: 200, dir: 0, chunk: 30, speed: 0 },
   'data-corrupt': { amount: 15, bh: 8, shift: 60, color: 1, speed: 0 },
   'neon-burn': { intensity: 8, hue: 180, sat: 180, speed: 0 },
-  'vhs': { noise: 30, jitter: 10, tracking: 5, bleed: 10, speed: 0 },
+  'vhs': { noise: 30, jitter: 10, bleed: 10, speed: 5, roll: 0, desync: 20 },
   'hologram': { opacity: 70, lines: 3, shift: 5, speed: 0 },
   'noise': { amount: 25, color: 0, blend: 70, speed: 0 },
   'edge-glow': { threshold: 30, glow: 4, darkbg: 1, speed: 0 },
@@ -66,9 +66,11 @@ export const PARAM_DEFS = {
   ],
   'vhs': [
     { k: 'noise', l: 'NOISE', mn: 0, mx: 100 },
-    { k: 'jitter', l: 'JITTER', mn: 0, mx: 30 },
-    { k: 'bleed', l: 'COLOR BLEED', mn: 0, mx: 30 },
-    { k: 'speed', l: 'DRIFT', mn: 0, mx: 20 }
+    { k: 'jitter', l: 'JITTER', mn: 0, mx: 50 },
+    { k: 'bleed', l: 'COLOR BLEED', mn: 0, mx: 50 },
+    { k: 'roll', l: 'VERTICAL ROLL', mn: 0, mx: 100 },
+    { k: 'desync', l: 'DE-SYNC', mn: 0, mx: 100 },
+    { k: 'speed', l: 'ANIM SPEED', mn: 0, mx: 20 }
   ],
   'hologram': [
     { k: 'opacity', l: 'OPACITY', mn: 0, mx: 100 },
@@ -112,7 +114,7 @@ export const PRESETS = {
   netpunk: { chain: [{ id: 'rgb-split', params: { x: 20, y: 8, bands: 12, intensity: 9 } }, { id: 'scanlines', params: { height: 2, gap: 4, opacity: 40 } }], accent: '#00fff9' },
   ghost: { chain: [{ id: 'hologram', params: { opacity: 55, lines: 8, shift: 12 } }], accent: '#00fff9' },
   corrupted: { chain: [{ id: 'data-corrupt', params: { amount: 40, bh: 15, shift: 120, color: 1 } }, { id: 'rgb-split', params: { x: 10, y: 3, bands: 8, intensity: 5 } }], accent: '#00fff9' },
-  'retro-tv': { chain: [{ id: 'vhs', params: { noise: 45, jitter: 20, tracking: 15, bleed: 20 } }, { id: 'scanlines', params: { height: 2, gap: 3, opacity: 50 } }], accent: '#00fff9' },
+  'retro-tv': { chain: [{ id: 'vhs', params: { noise: 45, jitter: 25, roll: 5, desync: 40, bleed: 20, speed: 6 } }, { id: 'scanlines', params: { height: 2, gap: 3, opacity: 50 } }], accent: '#00fff9' },
   'cyber-psycho': { chain: [{ id: 'edge-glow', params: { threshold: 25, glow: 8, darkbg: 1 } }, { id: 'channel-swap', params: { mode: 2 } }, { id: 'smear', params: { threshold: 180, length: 80 } }, { id: 'neon-burn', params: { intensity: 14, hue: 320, sat: 200 } }], accent: '#ff00ff' },
   'terminal-error': { chain: [{ id: 'invert', params: { amount: 100 } }, { id: 'data-corrupt', params: { amount: 30, bh: 10, shift: 80, color: 0 } }, { id: 'noise', params: { amount: 40, blend: 50 } }, { id: 'scanlines', params: { height: 1, gap: 2, opacity: 70 } }], accent: '#00ff41' },
   'acid-trip': { chain: [{ id: 'rgb-split', params: { x: 30, y: 15, intensity: 10, bands: 4 } }, { id: 'posterize', params: { levels: 3 } }, { id: 'smear', params: { threshold: 150, length: 120 } }, { id: 'noise', params: { amount: 20, blend: 80 } }], accent: '#7700ff' },

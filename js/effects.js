@@ -192,21 +192,73 @@ function fxNB(d, w, h, p, accentColor, time = 0) {
 
 function fxVHS(d, w, h, p, rng, time = 0) {
   const speed = (p.speed ?? 0) * 0.1;
-  const na = (p.noise ?? 30) / 100, jt = p.jitter ?? 10, tr = p.tracking ?? 5, bl = p.bleed ?? 10;
-  const buf = getBuffer(d.length); buf.set(d);
+  const na = (p.noise ?? 30) / 100;
+  const jt = p.jitter ?? 10;
+  const bl = p.bleed ?? 10;
+  const roll = (p.roll ?? 0) * 0.05 * time;
+  const desync = (p.desync ?? 0) / 100;
+
+  const buf = getBuffer(d.length);
+  buf.set(d);
+
+  // De-sync bar position (oscillates vertically)
+  const barPos = (time * 0.02 * (speed + 1)) % 2; // Goes from 0 to 2
+  const barHeight = 0.2;
+  const barY = (barPos > 1 ? 2 - barPos : barPos) * h; // Ping-pong
+
   for (let y = 0; y < h; y++) {
-    const tMod = speed > 0 ? (time * speed) : 0;
-    const to = Math.round(Math.sin(y / (h / tr) + rng() * Math.PI + tMod) * (jt + (speed > 0 ? Math.sin(time*speed*0.5)*5 : 0)));
+    // 1. Vertical Roll
+    let readY = (y + roll) % h;
+    if (readY < 0) readY += h;
     const yw = y * w;
+    const readYw = Math.floor(readY) * w;
+
+    // 2. Tracking Jitter & De-sync Bar
+    let to = Math.sin(y / (h / 8) + rng() * Math.PI + time * speed) * jt;
+
+    // Vertical De-sync Bar (Violent horizontal shaking and noise)
+    const distToBar = Math.abs(y - barY);
+    if (distToBar < barHeight * h) {
+      const strength = 1.0 - distToBar / (barHeight * h);
+      to += (rng() - 0.5) * strength * desync * 150;
+    }
+    
+    // Bottom Head Switching Noise (classic VHS artifact)
+    if (y > h - 15) {
+      to += (rng() - 0.5) * 20 * desync;
+    }
+
+    const ito = Math.round(to);
+
     for (let x = 0; x < w; x++) {
-      const sx = Math.min(Math.max(x + to, 0), w - 1), src = (yw + sx) * 4, i = (yw + x) * 4;
-      const bx = Math.min(Math.max(x - Math.round(bl * rng()), 0), w - 1), bsrc = (yw + bx) * 4;
-      d[i] = buf[bsrc]; d[i + 1] = buf[src + 1]; d[i + 2] = buf[src + 2];
-      if (rng() < na) { 
-        const n = (rng() - .5) * 80; 
-        d[i] = Math.max(0, Math.min(255, d[i] + n)); 
-        d[i+1] = Math.max(0, Math.min(255, d[i+1] + n)); 
-        d[i+2] = Math.max(0, Math.min(255, d[i+2] + n)); 
+      const idx = (yw + x) * 4;
+      
+      // Horizontal shift for Jitter
+      const sx = Math.min(Math.max(x + ito, 0), w - 1);
+      
+      // Color Bleeding (Red channel horizontal shift)
+      const bx = Math.min(Math.max(x - Math.round(bl + (distToBar < barHeight * h ? desync * 20 : 0)), 0), w - 1);
+      
+      const srcIdx = (readYw + sx) * 4;
+      const bsrcIdx = (readYw + bx) * 4;
+
+      d[idx] = buf[bsrcIdx];         // Red
+      d[idx + 1] = buf[srcIdx + 1];  // Green
+      d[idx + 2] = buf[srcIdx + 2];  // Blue
+      // Alpha stays same
+
+      // 3. Noise Overlay
+      if (rng() < na || (distToBar < barHeight * h && rng() < desync * 0.5)) {
+        const n = (rng() - 0.5) * 100;
+        d[idx] = Math.min(255, Math.max(0, d[idx] + n));
+        d[idx+1] = Math.min(255, Math.max(0, d[idx+1] + n));
+        d[idx+2] = Math.min(255, Math.max(0, d[idx+2] + n));
+      }
+      
+      // Extreme noise for the bottom "head switching" area
+      if (y > h - 15 && rng() < 0.3 * desync) {
+         const n = rng() * 255;
+         d[idx] = d[idx+1] = d[idx+2] = n;
       }
     }
   }
