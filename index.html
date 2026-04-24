@@ -29,7 +29,7 @@
 
   <div class="app">
     <!-- LEFT: Library -->
-    <div class="pl">
+    <div class="pl active" id="panel-library">
       <div class="stitle">// EFFECTS LIBRARY</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <div style="font-size:10px;color:var(--dim)">click [＋] to add to chain →</div>
@@ -79,7 +79,7 @@
     </div>
 
     <!-- CENTER: Canvas -->
-    <div class="ca">
+    <div class="ca active" id="panel-canvas">
       <div id="drop-zone">
         <div class="drop-ph" id="drop-ph" onclick="document.getElementById('file-input').click()">
           <span class="drop-icon">⬡</span>
@@ -109,7 +109,7 @@
 
 
     <!-- RIGHT: Chain + Settings -->
-    <div class="pr">
+    <div class="pr" id="panel-settings">
       <!-- CHAIN -->
       <div class="stitle">// EFFECT CHAIN</div>
       <div style="font-size:10px;color:var(--dim)">drag to reorder effects</div>
@@ -218,6 +218,21 @@
       </div>
     </div>
   </div>
+
+  <nav class="mobile-nav">
+    <div class="m-tab active" onclick="switchTab('library')" id="tab-library">
+      <span style="font-size:20px">⬡</span>
+      <span>LIBRARY</span>
+    </div>
+    <div class="m-tab" onclick="switchTab('canvas')" id="tab-canvas">
+      <span style="font-size:20px">■</span>
+      <span>STUDIO</span>
+    </div>
+    <div class="m-tab" onclick="switchTab('settings')" id="tab-settings">
+      <span style="font-size:20px">⚙</span>
+      <span>SETTINGS</span>
+    </div>
+  </nav>
 
   <script type="module">
     import { init } from './js/app.js';

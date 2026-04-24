@@ -257,6 +257,33 @@ function setupEventListeners() {
     
     if (enabled) updateLibraryPreviews();
   };
+
+  window.switchTab = (tab) => {
+    const isMobile = window.innerWidth <= 1024;
+    
+    // Panels
+    document.getElementById('panel-library').classList.toggle('active', tab === 'library');
+    document.getElementById('panel-settings').classList.toggle('active', tab === 'settings');
+    
+    // In vertical layout, we don't hide the canvas panel, but we might want to scroll to content
+    if (isMobile) {
+      if (tab === 'canvas') {
+        document.querySelector('.app').scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Scroll to the start of the panel
+        const panel = document.getElementById(`panel-${tab}`);
+        if (panel) {
+          const caHeight = document.getElementById('panel-canvas').offsetHeight;
+          document.querySelector('.app').scrollTo({ top: caHeight, behavior: 'smooth' });
+        }
+      }
+    }
+
+    // Tabs
+    document.getElementById('tab-library').classList.toggle('active', tab === 'library');
+    document.getElementById('tab-canvas').classList.toggle('active', tab === 'canvas');
+    document.getElementById('tab-settings').classList.toggle('active', tab === 'settings');
+  };
 }
 
 const libPreviewCanvas = document.createElement('canvas');

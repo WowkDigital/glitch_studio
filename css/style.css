@@ -106,6 +106,7 @@ header {
   gap: 9px;
   min-height: 0;
   height: 100%;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 
@@ -798,6 +799,152 @@ select {
 
 .fx-reset-btn:hover::after {
   opacity: 1;
+}
+
+/* --- MOBILE & RESPONSIVE --- */
+
+.mobile-nav {
+  display: none;
+  background: rgba(10, 10, 15, 0.9);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--bdr);
+  height: 60px;
+  flex-shrink: 0;
+  z-index: 200;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.m-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 9px;
+  color: var(--dim);
+  cursor: pointer;
+  transition: .2s;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 1px;
+}
+
+.m-tab.active {
+  color: var(--nc);
+  background: rgba(0, 255, 249, 0.05);
+  box-shadow: inset 0 2px 0 var(--nc);
+}
+
+.m-tab i {
+  font-size: 18px;
+}
+
+@media (max-width: 1024px) {
+  .app {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
+    padding-bottom: 60px;
+    height: 100%;
+  }
+
+  .ca {
+    order: -1;
+    flex-shrink: 0;
+    width: 100%;
+    min-height: 300px;
+    height: 50vh;
+    padding: 10px;
+    background: #000;
+    border-bottom: 1px solid var(--bdr);
+    z-index: 10;
+  }
+
+  .pl, .pr {
+    position: relative;
+    inset: auto;
+    height: auto;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    display: none;
+    flex: 1;
+    overflow-y: visible;
+  }
+
+  .pl.active, .pr.active {
+    display: flex;
+  }
+
+  .ca.hidden {
+    display: flex; /* Keep canvas visible even if other tabs are active */
+  }
+
+  .mobile-nav {
+    display: flex;
+  }
+
+  header {
+    padding: 10px;
+  }
+
+  header > div:nth-child(2) {
+    display: none;
+  }
+
+  .top-bar {
+    padding: 6px 10px;
+  }
+
+  .toolbar {
+    gap: 4px;
+  }
+
+  .btn {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .drop-ph {
+    padding: 30px 20px;
+  }
+
+  .effects-grid.live-mode {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pgrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .gitem img {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@media (max-width: 600px) {
+  .effects-grid.live-mode {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .logo {
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+
+  .hst {
+    font-size: 9px;
+  }
+}
+
+@media (max-height: 600px) {
+  header { height: 40px; padding: 5px 15px; }
+  .mobile-nav { height: 50px; }
 }
 
 .pgrid.live-mode {
